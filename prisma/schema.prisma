@@ -1,0 +1,304 @@
+// PatrolTrack – Prisma Schema
+// Centralized relational database for security guard patrol management.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─── Users & Roles ───────────────────────────────────────────────────────────
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  name          String
+  passwordHash  String
+  role          String   @default("GUARD") // ADMIN | SUPERVISOR | GUARD
+  phone         String?
+  avatarColor   String   @default("emerald")
+  status        String   @default("ACTIVE") // ACTIVE | DISABLED | LOCKED
+  failedLogins  Int      @default(0)
+  lastLoginAt   DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  guard         Guard?
+  supervisor    Supervisor?
+  auditLogs     AuditLog[]
+  notifications Notification[]
+  incidents     Incident[]
+  emergencyAlerts EmergencyAlert[]
+  announcements Announcement[]
+}
+
+model Guard {
+  id              String   @id @default(cuid())
+  userId          String   @unique
+  employeeId      String   @unique
+  rank            String   @default("Officer")
+  shift          String   @default("NIGHT") // DAY | NIGHT | ROTATING
+  status         String   @default("OFF_DUTY") // OFF_DUTY | ON_DUTY | ON_PATROL | BREAK | EMERGENCY
+  supervisorId    String?
+  licenseNumber   String?
+  hireDate        DateTime @default(now())
+  rating          Float    @default(5.0)
+  currentLat      Float?
+  currentLng      Float?
+  currentAccuracy Float?
+  lastLocationAt   DateTime?
+  batteryLevel    Int?
+  deviceInfo      String?
+  isOnline        Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  user            User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  supervisor      Supervisor? @relation(fields: [supervisorId], references: [id])
+  sessions        PatrolSession[]
+  schedules       PatrolSchedule[]
+  incidents       Incident[]
+  emergencyAlerts EmergencyAlert[]
+}
+
+model Supervisor {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  department String  @default("Operations")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  guards Guard[]
+}
+
+// ─── Locations, Routes, Checkpoints ─────────────────────────────────────────
+
+model Location {
+  id        String   @id @default(cuid())
+  name      String
+  address   String?
+  lat       Float
+  lng       Float
+  createdAt DateTime @default(now())
+
+  routes    PatrolRoute[]
+  checkpoints Checkpoint[]
+}
+
+model PatrolRoute {
+  id              String   @id @default(cuid())
+  name            String
+  locationId      String?
+  startLat        Float
+  startLng        Float
+  estimatedDurationMin Int  @default(60)
+  estimatedDistanceM  Int  @default(800)
+  status          String   @default("ACTIVE") // ACTIVE | ARCHIVED
+  description     String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  location        Location?   @relation(fields: [locationId], references: [id])
+  checkpoints     Checkpoint[]
+  schedules       PatrolSchedule[]
+  sessions        PatrolSession[]
+}
+
+model Checkpoint {
+  id            String   @id @default(cuid())
+  code          String   @unique
+  name          String
+  routeId       String
+  locationId    String?
+  lat           Float
+  lng           Float
+  radiusM       Int      @default(20)
+  sequence      Int
+  expectedWindowMin Int  @default(15) // minutes window after patrol start
+  description    String?
+  qrToken       String?
+  createdAt      DateTime @default(now())
+
+  route          PatrolRoute @relation(fields: [routeId], references: [id], onDelete: Cascade)
+  location       Location?   @relation(fields: [locationId], references: [id])
+  verifications  CheckpointVerification[]
+}
+
+// ─── Schedules & Patrol Sessions ─────────────────────────────────────────────
+
+model PatrolSchedule {
+  id            String   @id @default(cuid())
+  name          String
+  routeId       String
+  guardId       String?
+  date          DateTime
+  startTime     DateTime
+  endTime       DateTime
+  frequency    String   @default("ONE_TIME") // ONE_TIME | DAILY | WEEKLY
+  priority      String   @default("NORMAL") // LOW | NORMAL | HIGH | CRITICAL
+  instructions  String?
+  status        String   @default("SCHEDULED") // SCHEDULED | IN_PROGRESS | COMPLETED | CANCELLED | MISSED
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  route          PatrolRoute @relation(fields: [routeId], references: [id])
+  guard          Guard?      @relation(fields: [guardId], references: [id])
+  sessions       PatrolSession[]
+}
+
+model PatrolSession {
+  id            String   @id @default(cuid())
+  scheduleId    String?
+  routeId       String
+  guardId       String
+  status        String   @default("ACTIVE") // ACTIVE | COMPLETED | COMPLETED_WITH_ISSUES | INCOMPLETE | ABORTED
+  startedAt     DateTime @default(now())
+  endedAt       DateTime?
+  startLat      Float?
+  startLng      Float?
+  endLat        Float?
+  endLng        Float?
+  completedCount Int     @default(0)
+  missedCount   Int      @default(0)
+  lateCount     Int      @default(0)
+  totalCheckpoints Int   @default(0)
+  durationMin    Int?
+  notes         String?
+  report        String?
+  suspiciousFlags Int    @default(0)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  schedule       PatrolSchedule?  @relation(fields: [scheduleId], references: [id])
+  route          PatrolRoute      @relation(fields: [routeId], references: [id])
+  guard          Guard            @relation(fields: [guardId], references: [id])
+  verifications  CheckpointVerification[]
+  incidents      Incident[]
+}
+
+model CheckpointVerification {
+  id              String   @id @default(cuid())
+  sessionId       String
+  checkpointId    String
+  guardId         String
+  photoUrl        String?
+  capturedAt      DateTime @default(now())
+  serverTimestamp DateTime @default(now())
+  clientTimestamp DateTime @default(now())
+  deviceTimestamp DateTime @default(now())
+  lat             Float
+  lng             Float
+  gpsAccuracy     Float
+  distanceToCheckpoint Float
+  withinGeofence  Boolean
+  checklist       String   // JSON string of answers
+  notes           String?
+  deviceInfo      String?
+  status          String   @default("VERIFIED") // VERIFIED | REJECTED | FLAGGED | MISSED
+  rejectionReason String?
+  sequenceOrder   Int
+  isOnTime        Boolean  @default(true)
+  timingStatus    String   @default("ON_TIME") // EARLY | ON_TIME | LATE | MISSED
+  suspicious      Boolean  @default(false)
+  suspiciousFlags String?  // JSON string of flags
+  createdAt       DateTime @default(now())
+
+  session         PatrolSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  checkpoint      Checkpoint    @relation(fields: [checkpointId], references: [id])
+}
+
+// ─── Incidents & Emergencies ─────────────────────────────────────────────────
+
+model Incident {
+  id            String   @id @default(cuid())
+  sessionId     String?
+  guardId       String?
+  reportedById  String
+  type          String   // THEFT | SUSPICIOUS | DAMAGE | FIRE | ACCIDENT | ACCESS | EQUIPMENT | HAZARD | OTHER
+  description   String
+  severity      String   @default("LOW") // LOW | MEDIUM | HIGH | CRITICAL
+  status        String   @default("OPEN") // OPEN | INVESTIGATING | RESOLVED | CLOSED
+  lat           Float?
+  lng           Float?
+  locationLabel String?
+  photoUrls     String   // JSON array
+  occurredAt    DateTime @default(now())
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  session       PatrolSession? @relation(fields: [sessionId], references: [id])
+  guard         Guard?         @relation(fields: [guardId], references: [id])
+  reportedBy    User           @relation(fields: [reportedById], references: [id])
+}
+
+model EmergencyAlert {
+  id            String   @id @default(cuid())
+  guardId       String
+  guardUserId   String
+  lat           Float
+  lng           Float
+  accuracy      Float
+  locationLabel String?
+  status        String   @default("ACTIVE") // ACTIVE | ACKNOWLEDGED | RESOLVED
+  message       String?
+  acknowledgedAt DateTime?
+  resolvedAt    DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  guard      Guard @relation(fields: [guardId], references: [id])
+  guardUser  User   @relation(fields: [guardUserId], references: [id])
+}
+
+// ─── Notifications, Announcements, Audit ─────────────────────────────────────
+
+model Notification {
+  id            String   @id @default(cuid())
+  userId        String?
+  audience      String   @default("SUPERVISOR") // GUARD | SUPERVISOR | ADMIN | ALL
+  type          String   // PATROL_STARTING | MISSED_CHECKPOINT | LATE_CHECKPOINT | INVALID_VERIFICATION | INCIDENT | SOS | PATROL_COMPLETE | GUARD_OFFLINE | SUSPICIOUS | ANNOUNCEMENT
+  title         String
+  message       String
+  priority      String   @default("NORMAL")
+  read          Boolean  @default(false)
+  relatedId     String?
+  createdAt     DateTime @default(now())
+
+  user          User?    @relation(fields: [userId], references: [id])
+}
+
+model Announcement {
+  id            String   @id @default(cuid())
+  authorId      String
+  title         String
+  body          String
+  audience      String   @default("ALL")
+  createdAt     DateTime @default(now())
+
+  author        User     @relation(fields: [authorId], references: [id])
+}
+
+model AuditLog {
+  id            String   @id @default(cuid())
+  userId        String?
+  action        String
+  entity        String?
+  entityId      String?
+  details       String?
+  ip            String?
+  deviceInfo    String?
+  createdAt     DateTime @default(now())
+
+  user          User?    @relation(fields: [userId], references: [id])
+}
+
+model SystemSetting {
+  id            String   @id @default(cuid())
+  key           String   @unique
+  value         String
+  updatedAt     DateTime @updatedAt
+}
