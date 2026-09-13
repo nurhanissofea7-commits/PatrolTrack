@@ -64,9 +64,14 @@ export async function POST(req: NextRequest) {
     supervisorId: user.supervisor?.id ?? null,
   }
   const res = NextResponse.json({ user: session })
+  // Detect if the request came over HTTPS (preview is HTTPS; localhost dev is HTTP).
+  // On HTTPS we use SameSite=None; Secure so the cookie survives in cross-origin
+  // / embedded preview iframes. On HTTP (local dev) we fall back to SameSite=lax.
+  const isHttps = req.headers.get('x-forwarded-proto') === 'https' || req.nextUrl.protocol === 'https:'
   res.cookies.set(SESSION_COOKIE, makeSessionCookie(session), {
     httpOnly: true,
-    sameSite: 'lax',
+    sameSite: isHttps ? 'none' : 'lax',
+    secure: isHttps,
     path: '/',
     maxAge: 60 * 60 * 24 * 7,
   })
