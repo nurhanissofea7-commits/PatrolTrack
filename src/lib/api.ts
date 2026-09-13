@@ -150,6 +150,27 @@ export const api = {
   // settings
   settings: () => get<{ settings: Record<string, string> }>('/api/settings'),
   updateSettings: (body: Record<string, string>) => patch('/api/settings', body),
+
+  // users (admin only)
+  users: () => get<{ users: UserSummary[] }>('/api/users'),
+  createUser: (body: Record<string, unknown>) => post('/api/users', body),
+  updateUser: (id: string, body: Record<string, unknown>) => patch(`/api/users/${id}`, body),
+  resetPassword: (id: string, password: string) => post(`/api/users/${id}/reset-password`, { password }),
+}
+
+export interface UserSummary {
+  id: string
+  email: string
+  name: string
+  role: string
+  phone: string | null
+  avatarColor: string
+  status: string
+  failedLogins: number
+  lastLoginAt: string | null
+  createdAt: string
+  guard: { id: string; employeeId: string; rank: string; shift: string; supervisor: { id: string; name: string } | null } | null
+  supervisor: { id: string; department: string } | null
 }
 
 // Re-export Verification type for the api.patrol return

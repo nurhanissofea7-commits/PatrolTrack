@@ -16,6 +16,7 @@ import { ReportsView } from '@/components/patroltrack/views/reports'
 import { AnalyticsView } from '@/components/patroltrack/views/analytics'
 import { NotificationsView } from '@/components/patroltrack/views/notifications'
 import { AuditView } from '@/components/patroltrack/views/audit'
+import { UsersView } from '@/components/patroltrack/views/users'
 import { SettingsView } from '@/components/patroltrack/views/settings'
 import { toast } from 'sonner'
 
@@ -91,6 +92,7 @@ export default function Home() {
         {view === 'analytics' && <AnalyticsView />}
         {view === 'notifications' && <NotificationsView />}
         {view === 'audit' && <AuditView />}
+        {view === 'users' && user.role === 'ADMIN' && <UsersView currentUser={user} />}
         {view === 'settings' && user.role === 'ADMIN' && <SettingsView user={user} />}
         {view === 'settings' && user.role !== 'ADMIN' && (
           <div className="p-6 text-center text-sm text-slate-500">Settings are only available to administrators.</div>

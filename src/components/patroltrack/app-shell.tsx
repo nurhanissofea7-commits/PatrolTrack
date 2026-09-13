@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils'
 import {
   LayoutDashboard, MapPin, ClipboardList, CalendarClock, MapPinned, Users,
   AlertTriangle, FileText, BarChart3, Bell, ScrollText, Settings, Shield,
-  Menu, X, Moon, Sun, LogOut, ChevronDown, Smartphone,
+  Menu, X, Moon, Sun, LogOut, ChevronDown, Smartphone, UserCog,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -20,7 +20,7 @@ import type { SessionUser } from '@/lib/types'
 export type ViewId =
   | 'dashboard' | 'live' | 'patrols' | 'schedules' | 'checkpoints'
   | 'guards' | 'incidents' | 'reports' | 'analytics'
-  | 'notifications' | 'audit' | 'settings'
+  | 'notifications' | 'audit' | 'users' | 'settings'
 
 interface NavItem {
   id: ViewId
@@ -41,6 +41,7 @@ const NAV: NavItem[] = [
   { id: 'analytics', label: 'Analytics', icon: BarChart3 },
   { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'audit', label: 'Audit Logs', icon: ScrollText },
+  { id: 'users', label: 'User Management', icon: UserCog, adminOnly: true },
   { id: 'settings', label: 'Settings', icon: Settings, adminOnly: true },
 ]
 
@@ -56,6 +57,7 @@ const VIEW_LABELS: Record<ViewId, string> = {
   analytics: 'Patrol Analytics',
   notifications: 'Notifications',
   audit: 'Audit Logs',
+  users: 'User Management',
   settings: 'System Settings',
 }
 

@@ -160,17 +160,26 @@ export function GuardMode({ onClose }: { onClose: () => void }) {
 // ─── Phone status bar ───────────────────────────────────────────────────────
 function PhoneStatusBar({ guard }: { guard: Guard | null }) {
   const [time, setTime] = React.useState('')
+  const [online, setOnline] = React.useState(typeof navigator !== 'undefined' ? navigator.onLine : true)
   React.useEffect(() => {
     const tick = () => setTime(format(new Date(), 'HH:mm'))
     tick()
     const i = setInterval(tick, 30000)
-    return () => clearInterval(i)
+    const on = () => setOnline(true)
+    const off = () => setOnline(false)
+    window.addEventListener('online', on)
+    window.addEventListener('offline', off)
+    return () => { clearInterval(i); window.removeEventListener('online', on); window.removeEventListener('offline', off) }
   }, [])
   return (
     <div className="flex items-center justify-between bg-slate-900 px-5 py-1.5 text-[11px] font-medium text-white">
       <span>{time}</span>
       <div className="flex items-center gap-1.5">
-        <Wifi className="h-3 w-3" />
+        {online ? (
+          <span className="flex items-center gap-0.5 text-emerald-400"><Wifi className="h-3 w-3" /></span>
+        ) : (
+          <span className="flex items-center gap-0.5 text-amber-400"><WifiOff className="h-3 w-3" />Offline</span>
+        )}
         {guard?.batteryLevel != null && (
           <span className="flex items-center gap-0.5"><BatteryMedium className="h-3 w-3" />{guard.batteryLevel}%</span>
         )}
@@ -202,9 +211,25 @@ function GuardHome({ guard, activeSession, fullSession, mySchedules, onStartPatr
   const completed = fullSession?.checkpoints?.filter((c: any) => c.verification && (c.verification.status === 'VERIFIED' || c.verification.status === 'FLAGGED')).length ?? activeSession?.completedCount ?? 0
   const total = fullSession?.checkpoints?.length ?? activeSession?.totalCheckpoints ?? 0
   const progress = total ? Math.round((completed / total) * 100) : 0
+  const [online, setOnline] = React.useState(typeof navigator !== 'undefined' ? navigator.onLine : true)
+  React.useEffect(() => {
+    const on = () => setOnline(true)
+    const off = () => setOnline(false)
+    window.addEventListener('online', on)
+    window.addEventListener('offline', off)
+    return () => { window.removeEventListener('online', on); window.removeEventListener('offline', off) }
+  }, [])
 
   return (
     <div className="space-y-4">
+      {/* Offline banner */}
+      {!online && (
+        <div className="flex items-center gap-2 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-300">
+          <WifiOff className="h-4 w-4 shrink-0" />
+          <span><strong>Offline Mode.</strong> Records are stored locally and will sync automatically when connection returns.</span>
+        </div>
+      )}
+
       {/* Greeting */}
       <div className="overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-800 to-emerald-900 p-4 text-white">
         <div className="flex items-center gap-3">
@@ -216,7 +241,11 @@ function GuardHome({ guard, activeSession, fullSession, mySchedules, onStartPatr
           <StatusBadge status={guard.status} />
         </div>
         <div className="mt-3 flex items-center gap-3 text-[11px] text-slate-300">
-          <span className="flex items-center gap-1"><Wifi className="h-3 w-3 text-emerald-400" /> Online</span>
+          {online ? (
+            <span className="flex items-center gap-1"><Wifi className="h-3 w-3 text-emerald-400" /> Online</span>
+          ) : (
+            <span className="flex items-center gap-1"><WifiOff className="h-3 w-3 text-amber-400" /> Offline</span>
+          )}
           <span className="flex items-center gap-1"><Radio className="h-3 w-3 text-emerald-400" /> GPS ±{(guard.currentAccuracy ?? 6.4).toFixed(1)}m</span>
           {guard.batteryLevel != null && <span className="flex items-center gap-1"><BatteryMedium className="h-3 w-3 text-emerald-400" /> {guard.batteryLevel}%</span>}
         </div>
