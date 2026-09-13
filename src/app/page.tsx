@@ -71,6 +71,11 @@ export default function Home() {
     return <LoginScreen onSuccess={() => qc.invalidateQueries({ queryKey: ['me'] })} />
   }
 
+  // Security guards get the mobile app interface directly — no supervisor dashboard.
+  if (user.role === 'GUARD') {
+    return <GuardMode onSignOut={handleLogout} />
+  }
+
   return (
     <>
       <AppShell

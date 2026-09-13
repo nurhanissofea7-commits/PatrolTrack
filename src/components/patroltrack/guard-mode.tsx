@@ -22,7 +22,7 @@ import {
 import {
   Home, MapPinned, History, Bell, User as UserIcon, Siren, Camera, CheckCircle2,
   ChevronRight, X, AlertTriangle, Wifi, BatteryMedium, Radio, Clock, ShieldCheck,
-  Navigation, ChevronLeft, Plus, Activity, WifiOff,
+  Navigation, ChevronLeft, Plus, Activity, WifiOff, LogOut,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { format, formatDistanceToNow } from 'date-fns'
@@ -40,7 +40,7 @@ const SAFETY_CHECKLIST = [
   { q: 'Are there any safety hazards?', critical: true },
 ]
 
-export function GuardMode({ onClose }: { onClose: () => void }) {
+export function GuardMode({ onClose, onSignOut }: { onClose?: () => void; onSignOut?: () => void }) {
   const [tab, setTab] = React.useState<Tab>('home')
   const [guardId, setGuardId] = React.useState<string | null>(null)
   const qc = useQueryClient()
@@ -91,10 +91,12 @@ export function GuardMode({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/90 p-0 sm:p-6 backdrop-blur-sm">
-      {/* Close button */}
-      <button onClick={onClose} className="absolute right-4 top-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 sm:right-6 sm:top-6">
-        <X className="h-5 w-5" />
-      </button>
+      {/* Close button — only shown when opened from the supervisor dashboard */}
+      {onClose && (
+        <button onClick={onClose} className="absolute right-4 top-4 z-50 flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20 sm:right-6 sm:top-6">
+          <X className="h-5 w-5" />
+        </button>
+      )}
 
       {/* Phone frame */}
       <div className="relative flex h-full w-full max-w-[420px] flex-col overflow-hidden bg-slate-50 dark:bg-slate-950 sm:h-[860px] sm:max-h-[92vh] sm:rounded-[2.5rem] sm:border-8 sm:border-slate-800 sm:shadow-2xl">
@@ -139,7 +141,7 @@ export function GuardMode({ onClose }: { onClose: () => void }) {
               )}
               {tab === 'history' && <GuardHistory sessions={history} />}
               {tab === 'notifications' && <GuardNotifications notifications={notifications} />}
-              {tab === 'profile' && guard && <GuardProfile guard={guard} />}
+              {tab === 'profile' && guard && <GuardProfile guard={guard} onSignOut={onSignOut} />}
             </div>
           </ScrollArea>
         </div>
@@ -838,7 +840,7 @@ function GuardNotifications({ notifications }: { notifications: any[] }) {
   )
 }
 
-function GuardProfile({ guard }: { guard: Guard }) {
+function GuardProfile({ guard, onSignOut }: { guard: Guard; onSignOut?: () => void }) {
   return (
     <div className="space-y-4">
       <div className="flex flex-col items-center gap-2 rounded-2xl bg-gradient-to-br from-slate-900 to-emerald-900 p-5 text-white">
@@ -855,6 +857,14 @@ function GuardProfile({ guard }: { guard: Guard }) {
         <ProfileRow icon={Clock} label="Hired" value={format(new Date(guard.hireDate), 'dd MMM yyyy')} />
         <ProfileRow icon={Activity} label="Device" value={guard.deviceInfo ?? '—'} />
       </div>
+      {onSignOut && (
+        <button
+          onClick={onSignOut}
+          className="flex w-full items-center justify-center gap-2 rounded-xl border border-rose-500/30 bg-rose-500/10 px-4 py-3 text-sm font-semibold text-rose-600 transition-colors hover:bg-rose-500/20 dark:text-rose-400"
+        >
+          <LogOut className="h-4 w-4" /> Sign Out
+        </button>
+      )}
     </div>
   )
 }
