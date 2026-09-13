@@ -4,8 +4,30 @@ import type {
   Incident, AppNotification, Announcement, AuditLog, DashboardStats, SessionUser,
 } from './types'
 
+const TOKEN_KEY = 'pt_session_token'
+
+export function getToken(): string | null {
+  if (typeof window === 'undefined') return null
+  return localStorage.getItem(TOKEN_KEY)
+}
+
+export function setToken(token: string): void {
+  if (typeof window === 'undefined') return
+  localStorage.setItem(TOKEN_KEY, token)
+}
+
+export function clearToken(): void {
+  if (typeof window === 'undefined') return
+  localStorage.removeItem(TOKEN_KEY)
+}
+
+function authHeaders(): Record<string, string> {
+  const token = getToken()
+  return token ? { 'x-session': token } : {}
+}
+
 async function get<T>(url: string): Promise<T> {
-  const res = await fetch(url, { cache: 'no-store' })
+  const res = await fetch(url, { cache: 'no-store', headers: authHeaders() })
   if (!res.ok) throw new Error(`GET ${url} failed: ${res.status}`)
   return res.json()
 }
@@ -13,7 +35,7 @@ async function get<T>(url: string): Promise<T> {
 async function post<T>(url: string, body?: unknown): Promise<T> {
   const res = await fetch(url, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: body ? JSON.stringify(body) : undefined,
   })
   const data = await res.json().catch(() => null)
@@ -24,7 +46,7 @@ async function post<T>(url: string, body?: unknown): Promise<T> {
 async function patch<T>(url: string, body?: unknown): Promise<T> {
   const res = await fetch(url, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: body ? JSON.stringify(body) : undefined,
   })
   const data = await res.json().catch(() => null)
@@ -34,8 +56,15 @@ async function patch<T>(url: string, body?: unknown): Promise<T> {
 
 export const api = {
   // auth
-  login: (email: string, password: string) => post<{ user: SessionUser }>('/api/auth/login', { email, password }),
-  logout: () => post('/api/auth/logout'),
+  login: async (email: string, password: string) => {
+    const res = await post<{ user: SessionUser; token: string }>('/api/auth/login', { email, password })
+    if (res.token) setToken(res.token)
+    return res
+  },
+  logout: async () => {
+    try { await post('/api/auth/logout') } catch {}
+    clearToken()
+  },
   me: () => get<{ user: SessionUser | null }>('/api/auth/me'),
 
   // dashboard

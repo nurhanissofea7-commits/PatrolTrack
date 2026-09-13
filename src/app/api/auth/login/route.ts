@@ -63,15 +63,15 @@ export async function POST(req: NextRequest) {
     guardId: user.guard?.id ?? null,
     supervisorId: user.supervisor?.id ?? null,
   }
-  const res = NextResponse.json({ user: session })
-  // Detect if the request came over HTTPS (preview is HTTPS; localhost dev is HTTP).
-  // On HTTPS we use SameSite=None; Secure so the cookie survives in cross-origin
-  // / embedded preview iframes. On HTTP (local dev) we fall back to SameSite=lax.
-  const isHttps = req.headers.get('x-forwarded-proto') === 'https' || req.nextUrl.protocol === 'https:'
-  res.cookies.set(SESSION_COOKIE, makeSessionCookie(session), {
+  const token = makeSessionCookie(session)
+  // Return the token in the body so the frontend can store it in localStorage
+  // and send it via the x-session header. This works in every environment
+  // (HTTP, HTTPS, embedded iframe, cross-origin) without cookie restrictions.
+  // We also set the cookie as a fallback for same-origin requests.
+  const res = NextResponse.json({ user: session, token })
+  res.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,
-    sameSite: isHttps ? 'none' : 'lax',
-    secure: isHttps,
+    sameSite: 'lax',
     path: '/',
     maxAge: 60 * 60 * 24 * 7,
   })
