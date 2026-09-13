@@ -36,7 +36,7 @@ export const api = {
   // auth
   login: (email: string, password: string) => post<{ user: SessionUser }>('/api/auth/login', { email, password }),
   logout: () => post('/api/auth/logout'),
-  me: () => get<{ user: SessionUser }>('/api/auth/me'),
+  me: () => get<{ user: SessionUser | null }>('/api/auth/me'),
 
   // dashboard
   dashboard: () => get<DashboardStats>('/api/dashboard'),
