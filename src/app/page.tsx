@@ -96,7 +96,7 @@ export default function Home() {
         {view === 'reports' && <ReportsView />}
         {view === 'analytics' && <AnalyticsView />}
         {view === 'notifications' && <NotificationsView />}
-        {view === 'audit' && <AuditView />}
+        {view === 'audit' && user.role === 'ADMIN' && <AuditView />}
         {view === 'users' && user.role === 'ADMIN' && <UsersView currentUser={user} />}
         {view === 'settings' && user.role === 'ADMIN' && <SettingsView user={user} />}
         {view === 'settings' && user.role !== 'ADMIN' && (
