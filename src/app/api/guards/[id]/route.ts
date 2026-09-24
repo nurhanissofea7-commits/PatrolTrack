@@ -1,83 +1,92 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { db } from '@/lib/db'
+import { db } from '@/lib/firebase'
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params
-  const guard = await db.guard.findUnique({
-    where: { id },
-    include: {
-      user: true,
-      supervisor: { include: { user: true } },
-    },
-  })
+  const guard = await db.guard.findById(id)
   if (!guard) return NextResponse.json({ error: 'Guard not found' }, { status: 404 })
 
-  const sessions = await db.patrolSession.findMany({
-    where: { guardId: id },
-    include: { route: true, schedule: true, verifications: true, incidents: true },
-    orderBy: { startedAt: 'desc' },
-    take: 20,
-  })
+  const user = await db.user.findById(guard.userId)
+  let supervisor = null
+  if (guard.supervisorId) {
+    const sup = await db.supervisor.findById(guard.supervisorId)
+    if (sup) {
+      const supUser = await db.user.findById(sup.userId)
+      supervisor = { id: sup.id, name: supUser?.name || 'Unknown' }
+    }
+  }
 
-  const incidents = await db.incident.findMany({
-    where: { guardId: id },
-    orderBy: { createdAt: 'desc' },
-    take: 10,
-  })
+  const sessions = await db.patrolSession.findMany({ guardId: id })
+  // Sort by startedAt desc
+  sessions.sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime())
+
+  const incidents = await db.incident.findMany({ guardId: id })
+  incidents.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+
+  // Enrich sessions with route name
+  const enrichedSessions = []
+  for (const s of sessions.slice(0, 20)) {
+    const route = await db.patrolRoute.findById(s.routeId)
+    const verifications = await db.checkpointVerification.findMany({ sessionId: s.id })
+    const sessionIncidents = await db.incident.findMany({ sessionId: s.id })
+    enrichedSessions.push({
+      id: s.id,
+      routeName: route?.name || 'Unknown',
+      status: s.status,
+      startedAt: s.startedAt,
+      endedAt: s.endedAt || null,
+      durationMin: s.durationMin ?? null,
+      completedCount: s.completedCount || 0,
+      missedCount: s.missedCount || 0,
+      lateCount: s.lateCount || 0,
+      totalCheckpoints: s.totalCheckpoints || 0,
+      suspiciousFlags: s.suspiciousFlags || 0,
+      report: s.report || null,
+      scheduleName: null,
+    })
+  }
+
+  const enrichedIncidents = incidents.slice(0, 10).map((i) => ({
+    id: i.id,
+    type: i.type,
+    description: i.description,
+    severity: i.severity,
+    status: i.status,
+    occurredAt: i.occurredAt,
+    locationLabel: i.locationLabel || null,
+  }))
 
   return NextResponse.json({
     guard: {
       id: guard.id,
       employeeId: guard.employeeId,
-      name: guard.user.name,
-      email: guard.user.email,
-      phone: guard.user.phone,
-      avatarColor: guard.user.avatarColor,
+      name: user?.name || 'Unknown',
+      email: user?.email || '',
+      phone: user?.phone || null,
+      avatarColor: user?.avatarColor || 'emerald',
       rank: guard.rank,
       shift: guard.shift,
       status: guard.status,
       isOnline: guard.isOnline,
-      rating: guard.rating,
-      supervisor: guard.supervisor ? { id: guard.supervisor.id, name: guard.supervisor.user.name } : null,
-      currentLat: guard.currentLat,
-      currentLng: guard.currentLng,
-      currentAccuracy: guard.currentAccuracy,
-      lastLocationAt: guard.lastLocationAt,
-      batteryLevel: guard.batteryLevel,
-      deviceInfo: guard.deviceInfo,
-      licenseNumber: guard.licenseNumber,
-      hireDate: guard.hireDate,
+      rating: guard.rating || 5,
+      supervisor,
+      currentLat: guard.currentLat ?? null,
+      currentLng: guard.currentLng ?? null,
+      currentAccuracy: guard.currentAccuracy ?? null,
+      lastLocationAt: guard.lastLocationAt || null,
+      batteryLevel: guard.batteryLevel ?? null,
+      deviceInfo: guard.deviceInfo ?? null,
+      licenseNumber: guard.licenseNumber ?? null,
+      hireDate: guard.hireDate || new Date(),
     },
-    sessions: sessions.map((s) => ({
-      id: s.id,
-      routeName: s.route.name,
-      status: s.status,
-      startedAt: s.startedAt,
-      endedAt: s.endedAt,
-      durationMin: s.durationMin,
-      completedCount: s.completedCount,
-      missedCount: s.missedCount,
-      lateCount: s.lateCount,
-      totalCheckpoints: s.totalCheckpoints,
-      suspiciousFlags: s.suspiciousFlags,
-      report: s.report,
-      scheduleName: s.schedule?.name,
-    })),
-    incidents: incidents.map((i) => ({
-      id: i.id,
-      type: i.type,
-      description: i.description,
-      severity: i.severity,
-      status: i.status,
-      occurredAt: i.occurredAt,
-      locationLabel: i.locationLabel,
-    })),
+    sessions: enrichedSessions,
+    incidents: enrichedIncidents,
     patrolStats: {
       total: sessions.length,
       completed: sessions.filter((s) => s.status === 'COMPLETED').length,
       withIssues: sessions.filter((s) => s.status === 'COMPLETED_WITH_ISSUES').length,
       active: sessions.filter((s) => s.status === 'ACTIVE').length,
-      avgRating: guard.rating,
+      avgRating: guard.rating || 5,
     },
   })
 }

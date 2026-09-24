@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createHash } from 'crypto'
-import { db } from '@/lib/db'
+import { db } from '@/lib/firebase'
 import { getCurrentUser } from '@/lib/auth'
 
 function hashPassword(pw: string) {
@@ -19,27 +19,22 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: 'Password must be at least 6 characters.' }, { status: 400 })
   }
 
-  const target = await db.user.findUnique({ where: { id } })
+  const target = await db.user.findById(id)
   if (!target) return NextResponse.json({ error: 'User not found.' }, { status: 404 })
 
-  await db.user.update({
-    where: { id },
-    data: {
-      passwordHash: hashPassword(body.password),
-      failedLogins: 0,
-      status: target.status === 'LOCKED' ? 'ACTIVE' : target.status,
-    },
+  await db.user.update(id, {
+    passwordHash: hashPassword(body.password),
+    failedLogins: 0,
+    status: target.status === 'LOCKED' ? 'ACTIVE' : target.status,
   })
 
   await db.auditLog.create({
-    data: {
-      userId: currentUser.id,
-      action: 'PASSWORD_RESET',
-      entity: 'User',
-      entityId: id,
-      details: `Reset password for ${target.name}`,
-      ip: req.headers.get('x-forwarded-for') || undefined,
-    },
+    userId: currentUser.id,
+    action: 'PASSWORD_RESET',
+    entity: 'User',
+    entityId: id,
+    details: `Reset password for ${target.name}`,
+    ip: req.headers.get('x-forwarded-for') || undefined,
   })
 
   return NextResponse.json({ ok: true })

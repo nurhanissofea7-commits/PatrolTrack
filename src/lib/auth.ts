@@ -1,6 +1,6 @@
-// PatrolTrack – Server-side auth helper (token-based session)
-import { cookies, headers } from 'next/headers'
-import { db } from './db'
+// PatrolTrack – Server-side auth helper (Firebase + token-based session)
+import { headers, cookies } from 'next/headers'
+import { db } from './firebase'
 
 export const SESSION_COOKIE = 'pt_session'
 export const SESSION_HEADER = 'x-session'
@@ -18,18 +18,18 @@ export interface SessionUser {
 async function decodeSession(raw: string): Promise<SessionUser | null> {
   try {
     const parsed = JSON.parse(Buffer.from(raw, 'base64').toString('utf-8')) as SessionUser
-    const u = await db.user.findUnique({
-      where: { id: parsed.id },
-      include: { supervisor: true, guard: true },
-    })
+    const u = await db.user.findById(parsed.id)
     if (u && u.status === 'ACTIVE') {
+      // Look up guard/supervisor records
+      const guard = await db.guard.findOne('userId', u.id)
+      const supervisor = await db.supervisor.findOne('userId', u.id)
       return {
         id: u.id,
         name: u.name,
         email: u.email,
         role: u.role as SessionUser['role'],
-        guardId: u.guard?.id ?? null,
-        supervisorId: u.supervisor?.id ?? null,
+        guardId: guard?.id ?? null,
+        supervisorId: supervisor?.id ?? null,
       }
     }
   } catch {
@@ -39,9 +39,6 @@ async function decodeSession(raw: string): Promise<SessionUser | null> {
 }
 
 // Returns the currently logged-in user, or null when signed out.
-// Reads the session token from the x-session header first (works in all
-// environments including embedded HTTPS preview iframes), then falls back
-// to the cookie for same-origin requests.
 export async function getCurrentUser(): Promise<SessionUser | null> {
   const headerStore = await headers()
   const headerToken = headerStore.get(SESSION_HEADER)

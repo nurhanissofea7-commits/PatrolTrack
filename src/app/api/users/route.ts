@@ -1,14 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createHash } from 'crypto'
-import { db } from '@/lib/db'
+import { db, generateId } from '@/lib/firebase'
 import { getCurrentUser } from '@/lib/auth'
 
 function hashPassword(pw: string) {
   return createHash('sha256').update('patroltrack$' + pw).digest('hex')
-}
-
-function requireAdmin() {
-  // Returns null if allowed, else an error response
 }
 
 // GET /api/users — list all users (admin only)
@@ -17,38 +13,48 @@ export async function GET(req: NextRequest) {
   if (!user || user.role !== 'ADMIN') {
     return NextResponse.json({ error: 'Administrator access required.' }, { status: 403 })
   }
-  const users = await db.user.findMany({
-    include: { guard: { include: { supervisor: { include: { user: true } } } }, supervisor: true },
-    orderBy: { name: 'asc' },
-  })
-  return NextResponse.json({
-    users: users.map((u) => ({
+  const users = await db.user.findAll()
+  const result = []
+  for (const u of users) {
+    const guard = u.id ? await db.guard.findOne('userId', u.id) : null
+    let supervisorInfo = null
+    if (guard?.supervisorId) {
+      const sup = await db.supervisor.findById(guard.supervisorId)
+      if (sup) {
+        const supUser = await db.user.findById(sup.userId)
+        supervisorInfo = { id: sup.id, name: supUser?.name || 'Unknown' }
+      }
+    }
+    const supervisor = u.id ? await db.supervisor.findOne('userId', u.id) : null
+    result.push({
       id: u.id,
       email: u.email,
       name: u.name,
       role: u.role,
-      phone: u.phone,
-      avatarColor: u.avatarColor,
-      status: u.status,
-      failedLogins: u.failedLogins,
-      lastLoginAt: u.lastLoginAt,
+      phone: u.phone ?? null,
+      avatarColor: u.avatarColor || 'emerald',
+      status: u.status || 'ACTIVE',
+      failedLogins: u.failedLogins || 0,
+      lastLoginAt: u.lastLoginAt ?? null,
       createdAt: u.createdAt,
-      guard: u.guard ? {
-        id: u.guard.id,
-        employeeId: u.guard.employeeId,
-        rank: u.guard.rank,
-        shift: u.guard.shift,
-        supervisor: u.guard.supervisor ? { id: u.guard.supervisor.id, name: u.guard.supervisor.user.name } : null,
+      guard: guard ? {
+        id: guard.id,
+        employeeId: guard.employeeId,
+        rank: guard.rank,
+        shift: guard.shift,
+        supervisor: supervisorInfo,
       } : null,
-      supervisor: u.supervisor ? { id: u.supervisor.id, department: u.supervisor.department } : null,
-    })),
-  })
+      supervisor: supervisor ? { id: supervisor.id, department: supervisor.department } : null,
+    })
+  }
+  result.sort((a, b) => a.name.localeCompare(b.name))
+  return NextResponse.json({ users: result })
 }
 
 // POST /api/users — create a new user (admin only)
 export async function POST(req: NextRequest) {
-  const user = await getCurrentUser()
-  if (!user || user.role !== 'ADMIN') {
+  const currentUser = await getCurrentUser()
+  if (!currentUser || currentUser.role !== 'ADMIN') {
     return NextResponse.json({ error: 'Administrator access required.' }, { status: 403 })
   }
   const body = await req.json()
@@ -60,58 +66,54 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid role.' }, { status: 400 })
   }
 
-  const existing = await db.user.findUnique({ where: { email: body.email.toLowerCase() } })
+  const existing = await db.user.findOne('email', body.email.toLowerCase())
   if (existing) {
     return NextResponse.json({ error: 'A user with this email already exists.' }, { status: 409 })
   }
 
-  // Generate a unique employee ID for guards
-  const newId = await db.$transaction(async (tx) => {
-    const newUser = await tx.user.create({
-      data: {
-        email: body.email.toLowerCase(),
-        name: body.name,
-        role,
-        passwordHash: hashPassword(body.password),
-        phone: body.phone || null,
-        avatarColor: body.avatarColor || 'emerald',
-      },
-    })
-
-    if (role === 'GUARD') {
-      const count = await tx.guard.count()
-      const employeeId = `SEC-${new Date().getFullYear()}-${String(count + 1).padStart(4, '0')}`
-      await tx.guard.create({
-        data: {
-          userId: newUser.id,
-          employeeId,
-          rank: body.rank || 'Officer',
-          shift: body.shift || 'DAY',
-          supervisorId: body.supervisorId || null,
-          licenseNumber: body.licenseNumber || null,
-        },
-      })
-    } else if (role === 'SUPERVISOR') {
-      await tx.supervisor.create({
-        data: {
-          userId: newUser.id,
-          department: body.department || 'Operations',
-        },
-      })
-    }
-
-    await tx.auditLog.create({
-      data: {
-        userId: user.id,
-        action: 'USER_CREATE',
-        entity: 'User',
-        entityId: newUser.id,
-        details: `Created ${role.toLowerCase()} account: ${newUser.name} (${newUser.email})`,
-        ip: req.headers.get('x-forwarded-for') || undefined,
-      },
-    })
-    return newUser
+  const userId = generateId()
+  await db.user.create({
+    id: userId,
+    email: body.email.toLowerCase(),
+    name: body.name,
+    role,
+    passwordHash: hashPassword(body.password),
+    phone: body.phone || null,
+    avatarColor: body.avatarColor || 'emerald',
+    status: 'ACTIVE',
+    failedLogins: 0,
   })
 
-  return NextResponse.json({ id: newId.id, ok: true })
+  if (role === 'GUARD') {
+    const guardCount = (await db.guard.findAll()).length
+    const employeeId = `SEC-${new Date().getFullYear()}-${String(guardCount + 1).padStart(4, '0')}`
+    await db.guard.create({
+      userId,
+      employeeId,
+      rank: body.rank || 'Officer',
+      shift: body.shift || 'DAY',
+      supervisorId: body.supervisorId || null,
+      licenseNumber: body.licenseNumber || null,
+      status: 'OFF_DUTY',
+      isOnline: false,
+      rating: 5.0,
+      hireDate: new Date(),
+    })
+  } else if (role === 'SUPERVISOR') {
+    await db.supervisor.create({
+      userId,
+      department: body.department || 'Operations',
+    })
+  }
+
+  await db.auditLog.create({
+    userId: currentUser.id,
+    action: 'USER_CREATE',
+    entity: 'User',
+    entityId: userId,
+    details: `Created ${role.toLowerCase()} account: ${body.name} (${body.email})`,
+    ip: req.headers.get('x-forwarded-for') || undefined,
+  })
+
+  return NextResponse.json({ id: userId, ok: true })
 }

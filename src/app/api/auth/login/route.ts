@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createHash } from 'crypto'
-import { db } from '@/lib/db'
-import { makeSessionCookie, SESSION_COOKIE } from '@/lib/auth'
+import { db, generateId } from '@/lib/firebase'
+import { makeSessionToken, SESSION_COOKIE } from '@/lib/auth'
 
 function hashPassword(pw: string) {
   return createHash('sha256').update('patroltrack$' + pw).digest('hex')
@@ -12,10 +12,7 @@ export async function POST(req: NextRequest) {
   if (!body?.email || !body?.password) {
     return NextResponse.json({ error: 'Email and password are required.' }, { status: 400 })
   }
-  const user = await db.user.findUnique({
-    where: { email: body.email.toLowerCase() },
-    include: { guard: true, supervisor: true },
-  })
+  const user = await db.user.findOne('email', body.email.toLowerCase())
   if (!user) {
     return NextResponse.json({ error: 'Invalid credentials.' }, { status: 401 })
   }
@@ -23,51 +20,41 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Account locked. Contact administrator.' }, { status: 403 })
   }
   if (user.passwordHash !== hashPassword(body.password)) {
-    const failed = user.failedLogins + 1
-    await db.user.update({
-      where: { id: user.id },
-      data: { failedLogins: failed, status: failed >= 5 ? 'LOCKED' : user.status },
-    })
+    const failed = (user.failedLogins || 0) + 1
+    await db.user.update(user.id, { failedLogins: failed, status: failed >= 5 ? 'LOCKED' : user.status })
     await db.auditLog.create({
-      data: {
-        userId: user.id,
-        action: 'LOGIN_FAILED',
-        entity: 'User',
-        details: `Failed login attempt (${failed}/5)`,
-        ip: req.headers.get('x-forwarded-for') || undefined,
-      },
+      userId: user.id,
+      action: 'LOGIN_FAILED',
+      entity: 'User',
+      details: `Failed login attempt (${failed}/5)`,
+      ip: req.headers.get('x-forwarded-for') || undefined,
     })
     return NextResponse.json({ error: 'Invalid credentials.' }, { status: 401 })
   }
 
-  await db.user.update({
-    where: { id: user.id },
-    data: { failedLogins: 0, lastLoginAt: new Date() },
-  })
+  await db.user.update(user.id, { failedLogins: 0, lastLoginAt: new Date() })
   await db.auditLog.create({
-    data: {
-      userId: user.id,
-      action: 'USER_LOGIN',
-      entity: 'User',
-      details: `${user.name} signed in`,
-      ip: req.headers.get('x-forwarded-for') || undefined,
-      deviceInfo: req.headers.get('user-agent') || undefined,
-    },
+    userId: user.id,
+    action: 'USER_LOGIN',
+    entity: 'User',
+    details: `${user.name} signed in`,
+    ip: req.headers.get('x-forwarded-for') || undefined,
+    deviceInfo: req.headers.get('user-agent') || undefined,
   })
+
+  // Look up guard/supervisor records
+  const guard = await db.guard.findOne('userId', user.id)
+  const supervisor = await db.supervisor.findOne('userId', user.id)
 
   const session = {
     id: user.id,
     name: user.name,
     email: user.email,
     role: user.role,
-    guardId: user.guard?.id ?? null,
-    supervisorId: user.supervisor?.id ?? null,
+    guardId: guard?.id ?? null,
+    supervisorId: supervisor?.id ?? null,
   }
-  const token = makeSessionCookie(session)
-  // Return the token in the body so the frontend can store it in localStorage
-  // and send it via the x-session header. This works in every environment
-  // (HTTP, HTTPS, embedded iframe, cross-origin) without cookie restrictions.
-  // We also set the cookie as a fallback for same-origin requests.
+  const token = makeSessionToken(session)
   const res = NextResponse.json({ user: session, token })
   res.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,
