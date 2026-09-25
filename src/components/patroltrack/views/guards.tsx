@@ -12,7 +12,7 @@ import {
 } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Users, Star, Phone, Mail, IdCard, Shield, Award, Activity, CheckCircle2, AlertTriangle } from 'lucide-react'
-import { format } from 'date-fns'
+import { safeFormat as format } from '@/lib/dates'
 import type { Guard, PatrolSession, Incident } from '@/lib/types'
 
 export function GuardsView() {
@@ -119,7 +119,7 @@ function GuardDetailDialog({ guardId, onClose }: { guardId: string; onClose: () 
               <ContactRow icon={Mail} label="Email" value={guard.email} />
               <ContactRow icon={Phone} label="Phone" value={guard.phone ?? '—'} />
               <ContactRow icon={Users} label="Supervisor" value={guard.supervisor?.name ?? 'Unassigned'} />
-              <ContactRow icon={Shield} label="Hired" value={format(new Date(guard.hireDate), 'dd MMM yyyy')} />
+              <ContactRow icon={Shield} label="Hired" value={format(guard.hireDate, 'dd MMM yyyy')} />
             </div>
 
             {guard.deviceInfo && (
@@ -148,7 +148,7 @@ function GuardDetailDialog({ guardId, onClose }: { guardId: string; onClose: () 
                     <div key={s.id} className="flex items-center justify-between rounded-lg border border-slate-200/70 bg-white p-2.5 text-sm dark:border-slate-800 dark:bg-slate-900/50">
                       <div>
                         <p className="font-medium text-slate-800 dark:text-slate-100">{s.routeName}</p>
-                        <p className="text-[11px] text-slate-400">{format(new Date(s.startedAt), 'dd MMM, HH:mm')}{s.endedAt && ` → ${format(new Date(s.endedAt), 'HH:mm')}`}</p>
+                        <p className="text-[11px] text-slate-400">{format(s.startedAt, 'dd MMM, HH:mm')}{s.endedAt && ` → ${format(s.endedAt, 'HH:mm')}`}</p>
                       </div>
                       <div className="flex items-center gap-2 text-xs">
                         <span className="text-emerald-600">{s.completedCount}/{s.totalCheckpoints}</span>

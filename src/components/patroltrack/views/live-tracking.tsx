@@ -8,7 +8,7 @@ import { GuardAvatar } from '../guard-avatar'
 import { StatusBadge } from '../status-badges'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { BatteryMedium, Wifi, MapPin, Clock, Radio, ShieldAlert } from 'lucide-react'
-import { formatDistanceToNow } from 'date-fns'
+import { safeDistanceToNow } from '@/lib/dates'
 import type { LiveGuard } from '@/lib/types'
 
 export function LiveTrackingView({ liveGuards, sosAlert }: { liveGuards: LiveGuard[]; sosAlert: any | null }) {
@@ -104,7 +104,7 @@ export function LiveTrackingView({ liveGuards, sosAlert }: { liveGuards: LiveGua
                 <div className="rounded-lg bg-slate-50 p-3 dark:bg-slate-800/50">
                   <p className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
                     <Clock className="h-3.5 w-3.5" />
-                    Last update: {formatDistanceToNow(new Date(selectedGuard.lastUpdate), { addSuffix: true })}
+                    Last update: {safeDistanceToNow(selectedGuard.lastUpdate)}
                   </p>
                   {selectedGuard.routeName && (
                     <p className="mt-1 flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">

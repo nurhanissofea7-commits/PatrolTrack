@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Bell, Check, Siren, AlertTriangle, ClipboardCheck, Clock, ShieldCheck, Radio, Volume2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { formatDistanceToNow } from 'date-fns'
+import { safeDistanceToNow } from '@/lib/dates'
 import { toast } from 'sonner'
 import type { AppNotification } from '@/lib/types'
 
@@ -85,7 +85,7 @@ export function NotificationsView() {
                       </div>
                       <p className="mt-0.5 text-xs text-slate-500 dark:text-slate-400">{n.message}</p>
                       <div className="mt-1 flex items-center gap-2 text-[10px] text-slate-400">
-                        <span>{formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}</span>
+                        <span>{safeDistanceToNow(n.createdAt)}</span>
                         <span>·</span>
                         <span className="uppercase tracking-wider">{n.priority}</span>
                         <span>·</span>

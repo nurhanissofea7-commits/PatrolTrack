@@ -17,7 +17,8 @@ import {
 } from '@/components/ui/dialog'
 import { Badge } from '@/components/ui/badge'
 import { CalendarClock, Plus, ChevronRight } from 'lucide-react'
-import { format } from 'date-fns'
+import { safeFormat as format, toDate } from '@/lib/dates'
+import { format as rawFormat } from 'date-fns'
 import { toast } from 'sonner'
 import type { Schedule } from '@/lib/types'
 
@@ -63,8 +64,8 @@ function ScheduleCard({ schedule }: { schedule: Schedule }) {
     CANCELLED: 'border-rose-500/30 bg-rose-500/5 text-rose-700 dark:text-rose-300',
     MISSED: 'border-amber-500/30 bg-amber-500/5 text-amber-700 dark:text-amber-300',
   }
-  const start = new Date(schedule.startTime)
-  const end = new Date(schedule.endTime)
+  const start = toDate(schedule.startTime)
+  const end = toDate(schedule.endTime)
   return (
     <div className="flex flex-col rounded-xl border border-slate-200/70 bg-white p-4 dark:border-slate-800 dark:bg-slate-900/50">
       <div className="flex items-start justify-between gap-2">
@@ -92,11 +93,11 @@ function ScheduleCard({ schedule }: { schedule: Schedule }) {
       <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
         <div className="rounded-md bg-slate-50 px-2.5 py-1.5 dark:bg-slate-800/50">
           <p className="text-[10px] uppercase tracking-wider text-slate-400">Date</p>
-          <p className="font-medium text-slate-700 dark:text-slate-200">{format(start, 'dd MMM yyyy')}</p>
+          <p className="font-medium text-slate-700 dark:text-slate-200">{start ? format(start, 'dd MMM yyyy') : '—'}</p>
         </div>
         <div className="rounded-md bg-slate-50 px-2.5 py-1.5 dark:bg-slate-800/50">
           <p className="text-[10px] uppercase tracking-wider text-slate-400">Time</p>
-          <p className="font-medium text-slate-700 dark:text-slate-200">{format(start, 'HH:mm')} → {format(end, 'HH:mm')}</p>
+          <p className="font-medium text-slate-700 dark:text-slate-200">{start && end ? `${format(start, 'HH:mm')} → ${format(end, 'HH:mm')}` : '—'}</p>
         </div>
       </div>
 
@@ -133,7 +134,7 @@ function CreateScheduleDialog({ open, onOpenChange }: { open: boolean; onOpenCha
 
   const mutation = useMutation({
     mutationFn: () => {
-      const dateStr = form.date || format(new Date(), 'yyyy-MM-dd')
+      const dateStr = form.date || rawFormat(new Date(), 'yyyy-MM-dd')
       return api.createSchedule({
         name: form.name || `Patrol — ${routesData?.routes.find((r) => r.id === form.routeId)?.name ?? 'Route'}`,
         routeId: form.routeId,

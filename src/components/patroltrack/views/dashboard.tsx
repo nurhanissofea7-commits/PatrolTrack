@@ -6,6 +6,27 @@ import { api } from '@/lib/api'
 import { StatCard, SectionCard, LoadingState } from '../shared'
 import { LiveMap } from '../live-map'
 import { GuardAvatar } from '../guard-avatar'
+
+// Safely format a date that might come as an ISO string, Firestore Timestamp, or Date
+function safeFormatDistance(date: any): string {
+  try {
+    if (!date) return 'unknown'
+    let d: Date
+    if (typeof date === 'string') d = new Date(date)
+    else if (date instanceof Date) d = date
+    else if (typeof date === 'object' && (date.seconds || date._seconds)) {
+      const s = date._seconds ?? date.seconds
+      const ns = date._nanoseconds ?? date.nanoseconds ?? 0
+      d = new Date(s * 1000 + ns / 1e6)
+    } else if (typeof date?.toDate === 'function') d = date.toDate()
+    else d = new Date(date)
+    if (isNaN(d.getTime())) return 'unknown'
+    return formatDistanceToNow(d, { addSuffix: true })
+  } catch {
+    return 'unknown'
+  }
+}
+
 import { StatusBadge } from '../status-badges'
 import { Progress } from '@/components/ui/progress'
 import { ScrollArea } from '@/components/ui/scroll-area'
@@ -149,7 +170,7 @@ function NotificationRow({ n }: { n: AppNotification }) {
           {!n.read && <span className="h-2 w-2 shrink-0 rounded-full bg-emerald-500" />}
         </div>
         <p className="mt-0.5 line-clamp-2 text-xs text-slate-500 dark:text-slate-400">{n.message}</p>
-        <p className="mt-1 text-[10px] text-slate-400">{formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}</p>
+        <p className="mt-1 text-[10px] text-slate-400">{safeFormatDistance(n.createdAt)}</p>
       </div>
     </div>
   )
@@ -166,7 +187,7 @@ function ActivePatrolRow({ patrol }: { patrol: PatrolSession }) {
             <p className="truncate text-sm font-semibold text-slate-900 dark:text-slate-100">{patrol.routeName}</p>
             <StatusBadge status="ON_PATROL" />
           </div>
-          <p className="text-xs text-slate-500 dark:text-slate-400">{patrol.guardName} · started {formatDistanceToNow(new Date(patrol.startedAt), { addSuffix: true })}</p>
+          <p className="text-xs text-slate-500 dark:text-slate-400">{patrol.guardName} · started {safeFormatDistance(patrol.startedAt)}</p>
         </div>
       </div>
       <div className="mt-3">

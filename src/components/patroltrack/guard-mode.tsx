@@ -25,7 +25,8 @@ import {
   Navigation, ChevronLeft, Plus, Activity, WifiOff, LogOut,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { format, formatDistanceToNow } from 'date-fns'
+import { safeFormat as format, safeDistanceToNow } from '@/lib/dates'
+import { format as rawFormat } from 'date-fns'
 import { toast } from 'sonner'
 import type { Guard, Checkpoint, PatrolSession, IncidentType } from '@/lib/types'
 
@@ -164,7 +165,7 @@ function PhoneStatusBar({ guard }: { guard: Guard | null }) {
   const [time, setTime] = React.useState('')
   const [online, setOnline] = React.useState(typeof navigator !== 'undefined' ? navigator.onLine : true)
   React.useEffect(() => {
-    const tick = () => setTime(format(new Date(), 'HH:mm'))
+    const tick = () => setTime(rawFormat(new Date(), 'HH:mm'))
     tick()
     const i = setInterval(tick, 30000)
     const on = () => setOnline(true)
@@ -261,7 +262,7 @@ function GuardHome({ guard, activeSession, fullSession, mySchedules, onStartPatr
             <StatusBadge status="ON_PATROL" />
           </div>
           <p className="mt-1 text-lg font-bold text-slate-900 dark:text-slate-100">{activeSession.routeName}</p>
-          <p className="text-xs text-slate-500">Started {formatDistanceToNow(new Date(activeSession.startedAt), { addSuffix: true })}</p>
+          <p className="text-xs text-slate-500">Started {safeDistanceToNow(activeSession.startedAt)}</p>
           <div className="mt-3">
             <div className="mb-1 flex items-center justify-between text-xs">
               <span className="text-slate-500">Progress</span>
@@ -297,7 +298,7 @@ function GuardHome({ guard, activeSession, fullSession, mySchedules, onStartPatr
                   <PriorityBadge priority={s.priority} />
                 </div>
                 <p className="text-xs text-slate-500">{s.routeName}</p>
-                <p className="mt-1 text-[11px] text-slate-400">{format(new Date(s.startTime), 'dd MMM, HH:mm')} → {format(new Date(s.endTime), 'HH:mm')}</p>
+                <p className="mt-1 text-[11px] text-slate-400">{format(s.startTime, 'dd MMM, HH:mm')} → {format(s.endTime, 'HH:mm')}</p>
                 {s.instructions && <p className="mt-1 line-clamp-2 text-[11px] text-amber-700 dark:text-amber-300">📋 {s.instructions}</p>}
               </div>
             ))}
@@ -381,7 +382,7 @@ function GuardPatrol({ guard, activeSession, fullSession, onSessionChanged }: {
         <p className="mt-1 text-lg font-bold text-slate-900 dark:text-slate-100">{activeSession.routeName}</p>
         <div className="mt-3 flex items-center gap-3 text-xs text-slate-500">
           <span className="flex items-center gap-1"><Radio className="h-3.5 w-3.5 text-emerald-500" /> GPS Live</span>
-          <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {formatDistanceToNow(new Date(activeSession.startedAt), { addSuffix: true })}</span>
+          <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {safeDistanceToNow(activeSession.startedAt)}</span>
         </div>
         <Progress value={progress} className="mt-3 h-2.5" />
         <p className="mt-1 text-center text-xs text-slate-500">{completed} / {total} checkpoints completed</p>
@@ -433,7 +434,7 @@ function GuardPatrol({ guard, activeSession, fullSession, onSessionChanged }: {
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{c.code} · {c.name}</p>
                     <p className="text-[11px] text-slate-400">
-                      {isDone ? `Verified · ${format(new Date(v.capturedAt), 'HH:mm')}` : isNext ? 'Tap to verify' : 'Pending'}
+                      {isDone ? `Verified · ${format(v.capturedAt, 'HH:mm')}` : isNext ? 'Tap to verify' : 'Pending'}
                     </p>
                   </div>
                   {isNext && (
@@ -810,7 +811,7 @@ function GuardHistory({ sessions }: { sessions: PatrolSession[] }) {
             <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{s.routeName}</p>
             <Badge variant="outline" className="text-[10px]">{s.status.replace(/_/g, ' ')}</Badge>
           </div>
-          <p className="text-[11px] text-slate-400">{format(new Date(s.startedAt), 'dd MMM, HH:mm')}{s.durationMin && ` · ${s.durationMin} min`}</p>
+          <p className="text-[11px] text-slate-400">{format(s.startedAt, 'dd MMM, HH:mm')}{s.durationMin && ` · ${s.durationMin} min`}</p>
           <div className="mt-1.5 flex items-center gap-3 text-[11px]">
             <span className="text-emerald-600">{s.completedCount} ✓</span>
             {s.missedCount > 0 && <span className="text-rose-600">{s.missedCount} ✗</span>}
@@ -832,7 +833,7 @@ function GuardNotifications({ notifications }: { notifications: any[] }) {
           <div key={n.id} className={cn('rounded-xl border p-3', !n.read ? 'border-emerald-500/30 bg-emerald-500/5' : 'border-slate-200/70 bg-white dark:border-slate-800 dark:bg-slate-900')}>
             <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{n.title}</p>
             <p className="text-[11px] text-slate-500 dark:text-slate-400">{n.message}</p>
-            <p className="mt-1 text-[10px] text-slate-400">{formatDistanceToNow(new Date(n.createdAt), { addSuffix: true })}</p>
+            <p className="mt-1 text-[10px] text-slate-400">{safeDistanceToNow(n.createdAt)}</p>
           </div>
         ))
       )}
@@ -854,7 +855,7 @@ function GuardProfile({ guard, onSignOut }: { guard: Guard; onSignOut?: () => vo
         <ProfileRow icon={ShieldCheck} label="Rating" value={`${guard.rating.toFixed(1)} / 5.0`} />
         <ProfileRow icon={UserIcon} label="Supervisor" value={guard.supervisor?.name ?? '—'} />
         <ProfileRow icon={Radio} label="License" value={guard.licenseNumber ?? '—'} />
-        <ProfileRow icon={Clock} label="Hired" value={format(new Date(guard.hireDate), 'dd MMM yyyy')} />
+        <ProfileRow icon={Clock} label="Hired" value={format(guard.hireDate, 'dd MMM yyyy')} />
         <ProfileRow icon={Activity} label="Device" value={guard.deviceInfo ?? '—'} />
       </div>
       {onSignOut && (

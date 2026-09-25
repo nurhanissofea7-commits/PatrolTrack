@@ -15,7 +15,7 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select'
 import { AlertTriangle, Siren, Flame, UserX, Wrench, CarFront, PackageX, Eye, Camera } from 'lucide-react'
-import { format } from 'date-fns'
+import { safeFormat as format } from '@/lib/dates'
 import { toast } from 'sonner'
 import type { Incident, IncidentType } from '@/lib/types'
 
@@ -84,7 +84,7 @@ function IncidentCard({ incident, onClick }: { incident: Incident; onClick: () =
         </div>
         <p className="mt-1 line-clamp-2 text-xs text-slate-600 dark:text-slate-300">{incident.description}</p>
         <div className="mt-2 flex items-center justify-between text-[11px] text-slate-400">
-          <span>{incident.guard ? `${incident.guard.name}` : 'Unknown'} · {format(new Date(incident.occurredAt), 'dd MMM, HH:mm')}</span>
+          <span>{incident.guard ? `${incident.guard.name}` : 'Unknown'} · {format(incident.occurredAt, 'dd MMM, HH:mm')}</span>
           <Badge variant="outline" className="text-[10px]">{incident.status}</Badge>
         </div>
       </div>
@@ -122,7 +122,7 @@ function IncidentDetailDialog({ incidentId, onClose }: { incidentId: string; onC
             <span>{incident?.type.replace(/_/g, ' ') ?? 'Incident'}</span>
           </DialogTitle>
           <DialogDescription>
-            {incident ? `Reported ${format(new Date(incident.occurredAt), 'dd MMM yyyy, HH:mm')} · ${incident.locationLabel ?? 'Unknown location'}` : 'Loading...'}
+            {incident ? `Reported ${format(incident.occurredAt, 'dd MMM yyyy, HH:mm')} · ${incident.locationLabel ?? 'Unknown location'}` : 'Loading...'}
           </DialogDescription>
         </DialogHeader>
 

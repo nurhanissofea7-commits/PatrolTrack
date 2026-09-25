@@ -14,7 +14,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog'
 import { CheckCircle2, XCircle, AlertTriangle, Clock, Camera, MapPin, ClipboardList } from 'lucide-react'
-import { format, formatDistanceToNow } from 'date-fns'
+import { safeFormat as format } from '@/lib/dates'
 import type { PatrolSession, Checkpoint, Verification } from '@/lib/types'
 
 const STATUS_TABS = ['ALL', 'ACTIVE', 'COMPLETED', 'COMPLETED_WITH_ISSUES', 'INCOMPLETE'] as const
@@ -68,8 +68,8 @@ export function PatrolsView() {
                   <StatusBadgeMini status={s.status} />
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400">
-                  {s.guardName} · {format(new Date(s.startedAt), 'dd MMM, HH:mm')}
-                  {s.endedAt && ` → ${format(new Date(s.endedAt), 'HH:mm')}`}
+                  {s.guardName} · {format(s.startedAt, 'dd MMM, HH:mm')}
+                  {s.endedAt && ` → ${format(s.endedAt, 'HH:mm')}`}
                   {s.durationMin && ` · ${s.durationMin} min`}
                 </p>
               </div>
@@ -127,7 +127,7 @@ function PatrolDetailDialog({ sessionId, onClose }: { sessionId: string; onClose
             {session && <StatusBadgeMini status={session.status} />}
           </DialogTitle>
           <DialogDescription>
-            {session ? `${session.guardName} · ${format(new Date(session.startedAt), 'dd MMM yyyy, HH:mm')}${session.endedAt ? ` → ${format(new Date(session.endedAt), 'HH:mm')}` : ''}` : 'Loading...'}
+            {session ? `${session.guardName} · ${format(session.startedAt, 'dd MMM yyyy, HH:mm')}${session.endedAt ? ` → ${format(session.endedAt, 'HH:mm')}` : ''}` : 'Loading...'}
           </DialogDescription>
         </DialogHeader>
 
@@ -192,7 +192,7 @@ function PatrolDetailDialog({ sessionId, onClose }: { sessionId: string; onClose
                       {v && v.status !== 'MISSED' && (
                         <div className="mt-2 grid gap-3 border-t border-slate-100 pt-2 dark:border-slate-800 sm:grid-cols-2">
                           <div className="space-y-1 text-xs">
-                            <p className="flex items-center gap-1.5 text-slate-500"><Camera className="h-3 w-3" /> {v.capturedAt ? format(new Date(v.capturedAt), 'dd MMM, HH:mm:ss') : '—'}</p>
+                            <p className="flex items-center gap-1.5 text-slate-500"><Camera className="h-3 w-3" /> {format(v.capturedAt, 'dd MMM, HH:mm:ss')}</p>
                             <p className="flex items-center gap-1.5 text-slate-500"><MapPin className="h-3 w-3" /> {v.distanceToCheckpoint >= 0 ? `${Math.round(v.distanceToCheckpoint)}m from CP · GPS ±${v.gpsAccuracy.toFixed(1)}m` : 'no GPS'}</p>
                             {v.notes && <p className="text-slate-600 dark:text-slate-300">📝 {v.notes}</p>}
                             {v.suspiciousFlags && (

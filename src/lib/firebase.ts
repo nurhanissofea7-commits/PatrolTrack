@@ -74,13 +74,47 @@ export function generateId(): string {
   return firestore.collection('_').doc().id
 }
 
+// Convert Firestore Timestamps to ISO strings for JSON serialization.
+// Firestore returns dates as { seconds, nanoseconds } or Timestamp objects.
+// The frontend expects ISO strings so `new Date()` works.
+function convertTimestamps(data: any): any {
+  if (data === null || data === undefined) return data
+  if (data && typeof data === 'object') {
+    // Firestore Timestamp object
+    if (data._seconds !== undefined || (data.seconds !== undefined && data.nanoseconds !== undefined)) {
+      const seconds = data._seconds ?? data.seconds
+      const nanoseconds = data._nanoseconds ?? data.nanoseconds ?? 0
+      return new Date(seconds * 1000 + nanoseconds / 1e6).toISOString()
+    }
+    // Firestore Timestamp class (has toDate method)
+    if (typeof data.toDate === 'function') {
+      return data.toDate().toISOString()
+    }
+    // Date object
+    if (data instanceof Date) {
+      return data.toISOString()
+    }
+    // Regular object — recurse
+    const result: Record<string, any> = {}
+    for (const [key, val] of Object.entries(data)) {
+      result[key] = convertTimestamps(val)
+    }
+    return result
+  }
+  return data
+}
+
 function docToObj<T = DocData>(doc: FirebaseFirestore.DocumentSnapshot): (T & { id: string }) | null {
   if (!doc.exists) return null
-  return { id: doc.id, ...(doc.data() as T) }
+  const data = doc.data() as T
+  return { id: doc.id, ...convertTimestamps(data) }
 }
 
 function queryToArr<T = DocData>(snap: FirebaseFirestore.QuerySnapshot): (T & { id: string })[] {
-  return snap.docs.map((d) => ({ id: d.id, ...(d.data() as T) }))
+  return snap.docs.map((d) => {
+    const data = d.data() as T
+    return { id: d.id, ...convertTimestamps(data) }
+  })
 }
 
 // ─── Generic model wrapper ─────────────────────────────────────────────────

@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ScrollText, User, Calendar, Globe, Monitor } from 'lucide-react'
-import { format } from 'date-fns'
+import { safeFormat as format } from '@/lib/dates'
 import type { AuditLog } from '@/lib/types'
 
 const ACTION_TONE: Record<string, string> = {
@@ -73,7 +73,7 @@ export function AuditView() {
                         {l.deviceInfo && <p className="flex items-center gap-1"><Monitor className="h-2.5 w-2.5" />{l.deviceInfo.slice(0, 24)}</p>}
                       </div>
                     </TableCell>
-                    <TableCell className="text-right text-[11px] text-slate-500">{format(new Date(l.createdAt), 'dd MMM, HH:mm:ss')}</TableCell>
+                    <TableCell className="text-right text-[11px] text-slate-500">{format(l.createdAt, 'dd MMM, HH:mm:ss')}</TableCell>
                   </TableRow>
                 ))}
               </TableBody>

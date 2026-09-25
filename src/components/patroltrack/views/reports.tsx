@@ -13,7 +13,7 @@ import {
 } from '@/components/ui/dialog'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { FileText, CheckCircle2, AlertTriangle, XCircle, Clock, Printer } from 'lucide-react'
-import { format } from 'date-fns'
+import { safeFormat as format } from '@/lib/dates'
 import type { PatrolSession } from '@/lib/types'
 
 const STATUS_TABS = ['ALL', 'COMPLETED', 'COMPLETED_WITH_ISSUES', 'INCOMPLETE'] as const
@@ -71,7 +71,7 @@ function ReportCard({ session, onClick }: { session: PatrolSession; onClick: () 
             {session.status.replace(/_/g, ' ')}
           </Badge>
         </div>
-        <p className="text-xs text-slate-500 dark:text-slate-400">{session.guardName} · {format(new Date(session.startedAt), 'dd MMM yyyy, HH:mm')}{session.durationMin && ` · ${session.durationMin} min`}</p>
+        <p className="text-xs text-slate-500 dark:text-slate-400">{session.guardName} · {format(session.startedAt, 'dd MMM yyyy, HH:mm')}{session.durationMin && ` · ${session.durationMin} min`}</p>
         {session.report && <p className="mt-1 line-clamp-1 text-[11px] text-slate-400">{session.report}</p>}
       </div>
       <div className="hidden items-center gap-3 text-xs sm:flex">
@@ -107,10 +107,10 @@ function ReportDialog({ sessionId, onClose }: { sessionId: string; onClose: () =
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
                 <Field label="Guard" value={session.guardName} />
                 <Field label="Route" value={session.routeName} />
-                <Field label="Date" value={format(new Date(session.startedAt), 'dd MMM yyyy')} />
+                <Field label="Date" value={format(session.startedAt, 'dd MMM yyyy')} />
                 <Field label="Duration" value={session.durationMin ? `${session.durationMin} min` : '—'} />
-                <Field label="Started" value={format(new Date(session.startedAt), 'HH:mm:ss')} />
-                <Field label="Ended" value={session.endedAt ? format(new Date(session.endedAt), 'HH:mm:ss') : '—'} />
+                <Field label="Started" value={format(session.startedAt, 'HH:mm:ss')} />
+                <Field label="Ended" value={session.endedAt ? format(session.endedAt, 'HH:mm:ss') : '—'} />
                 <Field label="Checkpoints" value={`${session.completedCount}/${session.totalCheckpoints}`} />
                 <Field label="Status" value={session.status.replace(/_/g, ' ')} />
               </div>
@@ -153,7 +153,7 @@ function ReportDialog({ sessionId, onClose }: { sessionId: string; onClose: () =
                           <p className="font-medium text-slate-800 dark:text-slate-100">{c.code} · {c.name}</p>
                           {v ? (
                             <p className="text-[11px] text-slate-400">
-                              {v.capturedAt ? format(new Date(v.capturedAt), 'dd MMM, HH:mm:ss') : '—'} ·
+                              {format(v.capturedAt, 'dd MMM, HH:mm:ss')} ·
                               {' '}{v.distanceToCheckpoint >= 0 ? `${Math.round(v.distanceToCheckpoint)}m` : 'no GPS'} ·
                               {' '}{v.timingStatus.replace(/_/g, ' ')} ·
                               {' '}<span className={v.status === 'VERIFIED' ? 'text-emerald-600' : v.status === 'FLAGGED' ? 'text-amber-600' : 'text-rose-600'}>{v.status}</span>
