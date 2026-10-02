@@ -33,7 +33,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { formatDistanceToNow } from 'date-fns'
 import type { DashboardStats, PatrolSession, AppNotification } from '@/lib/types'
 
-export function DashboardView({ liveGuards, onSelectGuard, onNavigate }: {
+export function DashboardView({ liveGuards: realtimeGuards, onSelectGuard, onNavigate }: {
   liveGuards: any[]
   onSelectGuard: (id: string) => void
   onNavigate: (v: 'live' | 'patrols' | 'incidents' | 'analytics') => void
@@ -41,9 +41,34 @@ export function DashboardView({ liveGuards, onSelectGuard, onNavigate }: {
   const { data: stats, isLoading: statsLoading } = useQuery({ queryKey: ['dashboard'], queryFn: api.dashboard })
   const { data: patrolsData } = useQuery({ queryKey: ['patrols', 'active'], queryFn: () => api.patrols(undefined, 'ACTIVE') })
   const { data: notifData } = useQuery({ queryKey: ['notifications'], queryFn: api.notifications })
+  const { data: guardsData } = useQuery({ queryKey: ['guards'], queryFn: api.guards, refetchInterval: 5000 })
 
   const activePatrols = patrolsData?.sessions ?? []
   const notifications = (notifData?.notifications ?? []).slice(0, 6)
+
+  // Merge Firebase guards (with GPS) with realtime Socket.IO guards
+  const liveGuards = React.useMemo(() => {
+    const apiGuards = (guardsData?.guards ?? [])
+      .filter((g) => g.currentLat != null && g.currentLng != null)
+      .map((g) => ({
+        guardId: g.id,
+        guardName: g.name,
+        lat: g.currentLat,
+        lng: g.currentLng,
+        accuracy: g.currentAccuracy ?? 6,
+        status: g.status,
+        patrolId: null,
+        routeName: null,
+        battery: g.batteryLevel ?? 100,
+        lastUpdate: g.lastLocationAt ? new Date(g.lastLocationAt).getTime() : Date.now(),
+      }))
+    const merged = new Map<string, any>()
+    for (const g of apiGuards) merged.set(g.guardId, g)
+    for (const g of realtimeGuards) {
+      if (!String(g.guardId).startsWith('seed-')) merged.set(g.guardId, g)
+    }
+    return Array.from(merged.values())
+  }, [guardsData, realtimeGuards])
 
   return (
     <div className="space-y-6 p-4 sm:p-6">
