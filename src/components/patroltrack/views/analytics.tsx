@@ -37,8 +37,6 @@ export function AnalyticsView() {
   }
   const incidentColors = ['#ef4444', '#f59e0b', '#0ea5e9', '#10b981', '#8b5cf6', '#f43f5e', '#14b8a6', '#eab308']
 
-  const maxPatrols = Math.max(...data.guardPerformance.map((g) => g.patrols), 1)
-
   return (
     <div className="space-y-6 p-4 sm:p-6">
       <div>
@@ -93,27 +91,6 @@ export function AnalyticsView() {
               <Bar dataKey="value" radius={[6, 6, 0, 0]} />
             </BarChart>
           </ChartContainer>
-        </SectionCard>
-
-        {/* Guard performance */}
-        <SectionCard title="Guard Performance" description="Patrols completed per guard">
-          <div className="space-y-3">
-            {data.guardPerformance.map((g) => (
-              <div key={g.name} className="space-y-1">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-medium text-slate-700 dark:text-slate-200">{g.name}</span>
-                  <div className="flex items-center gap-3 text-slate-500">
-                    <span className="text-emerald-600">{g.completed}/{g.patrols} done</span>
-                    <span className="text-amber-600">{g.checkpoints} CPs</span>
-                    {g.incidents > 0 && <span className="text-rose-600">{g.incidents} inc</span>}
-                  </div>
-                </div>
-                <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100 dark:bg-slate-800">
-                  <div className="h-full rounded-full bg-emerald-500" style={{ width: `${(g.patrols / maxPatrols) * 100}%` }} />
-                </div>
-              </div>
-            ))}
-          </div>
         </SectionCard>
 
         {/* Incident types */}
