@@ -167,6 +167,7 @@ export function DashboardView({ liveGuards: realtimeGuards, onSelectGuard, onNav
           )}
         </SectionCard>
 
+{/*
         <SectionCard
           title="Verification Accuracy"
           description="Checkpoint verification outcomes"
@@ -174,6 +175,7 @@ export function DashboardView({ liveGuards: realtimeGuards, onSelectGuard, onNav
         >
           {statsLoading ? <LoadingState rows={4} /> : <VerificationAccuracy stats={stats!} />}
         </SectionCard>
+*/}
       </div>
     </div>
   )
