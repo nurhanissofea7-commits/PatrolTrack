@@ -31,7 +31,8 @@ interface NavItem {
 
 const NAV: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { id: 'live', label: 'Live Tracking', icon: MapPin },
+  //Hidden - Live Tracking Page
+  //{ id: 'live', label: 'Live Tracking', icon: MapPin },
   { id: 'patrols', label: 'Patrol Management', icon: ClipboardList },
   { id: 'schedules', label: 'Schedules', icon: CalendarClock },
   { id: 'checkpoints', label: 'Checkpoints', icon: MapPinned },
