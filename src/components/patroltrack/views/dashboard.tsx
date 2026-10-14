@@ -115,6 +115,7 @@ export function DashboardView({ liveGuards: realtimeGuards, onSelectGuard, onNav
 
       <div className="grid gap-6 lg:grid-cols-3">
         {/* Live map preview */}
+        {/*
         <SectionCard
           className="lg:col-span-2"
           title="Live Guard Map"
@@ -131,6 +132,7 @@ export function DashboardView({ liveGuards: realtimeGuards, onSelectGuard, onNav
             className="h-[340px]"
           />
         </SectionCard>
+        */}
 
         {/* Notifications */}
         <SectionCard
