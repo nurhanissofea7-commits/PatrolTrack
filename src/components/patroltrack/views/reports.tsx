@@ -104,11 +104,13 @@ function ReportDialog({ sessionId, onClose }: { sessionId: string; onClose: () =
           <div className="space-y-4">
             {/* Report header */}
             <div className="rounded-xl border border-slate-200/70 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-800/30">
-              <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 <Field label="Guard" value={session.guardName} />
                 <Field label="Route" value={session.routeName} />
                 <Field label="Date" value={format(session.startedAt, 'dd MMM yyyy')} />
+                {/* HIDDEN — Duration
                 <Field label="Duration" value={session.durationMin ? `${session.durationMin} min` : '—'} />
+                */}
                 <Field label="Started" value={format(session.startedAt, 'HH:mm:ss')} />
                 <Field label="Ended" value={session.endedAt ? format(session.endedAt, 'HH:mm:ss') : '—'} />
                 <Field label="Checkpoints" value={`${session.completedCount}/${session.totalCheckpoints}`} />
@@ -154,7 +156,9 @@ function ReportDialog({ sessionId, onClose }: { sessionId: string; onClose: () =
                             {v ? (
                               <p className="mt-0.5 text-[11px] text-slate-400">
                                 {format(v.capturedAt, 'dd MMM, HH:mm:ss')} ·
+                                {/* HIDDEN — Distance
                                 {' '}{v.distanceToCheckpoint >= 0 ? `${Math.round(v.distanceToCheckpoint)}m` : 'no GPS'} ·
+                                */}
                                 {' '}{v.timingStatus.replace(/_/g, ' ')} ·
                                 {' '}<span className={v.status === 'VERIFIED' ? 'text-emerald-600' : v.status === 'FLAGGED' ? 'text-amber-600' : 'text-rose-600'}>{v.status}</span>
                               </p>
