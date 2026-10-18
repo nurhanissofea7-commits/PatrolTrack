@@ -58,14 +58,18 @@ export function SettingsView({ user }: { user: SessionUser }) {
         {/* Verification rules */}
         <SectionCard title="Checkpoint Verification Rules" description="Anti-tampering and validation thresholds">
           <div className="space-y-4">
+            {/* HIDDEN — Default Geofence Radius
             <SettingRow icon={Radio} label="Default Geofence Radius" hint="Meters allowed from checkpoint center">
               <Input type="number" value={form['checkpoint.radius.default'] ?? ''} onChange={(e) => setForm({ ...form, 'checkpoint.radius.default': e.target.value })} className="w-24" />
               <span className="text-xs text-slate-400">meters</span>
             </SettingRow>
+            */}
+            {/* HIDDEN — Auto-Flag Speed Threshold
             <SettingRow icon={Shield} label="Auto-Flag Speed Threshold" hint="Flag impossible travel above this speed">
               <Input type="number" value={form['patrol.autoFlag.speedKmh'] ?? ''} onChange={(e) => setForm({ ...form, 'patrol.autoFlag.speedKmh': e.target.value })} className="w-24" />
               <span className="text-xs text-slate-400">km/h</span>
             </SettingRow>
+            */}
             <SettingRow icon={Shield} label="SOS Confirmation Required" hint="Require hold-to-confirm before SOS activation">
               <Switch checked={form['patrol.sos.requireConfirm'] === 'true'} onCheckedChange={(v) => setForm({ ...form, 'patrol.sos.requireConfirm': String(v) })} />
             </SettingRow>
