@@ -39,7 +39,8 @@ const NAV: NavItem[] = [
   { id: 'guards', label: 'Guards', icon: Users },
   { id: 'incidents', label: 'Incidents', icon: AlertTriangle },
   { id: 'reports', label: 'Reports', icon: FileText },
-  { id: 'analytics', label: 'Analytics', icon: BarChart3 },
+  //Hidden - Analytics Page
+  //{ id: 'analytics', label: 'Analytics', icon: BarChart3 },
   { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'audit', label: 'Audit Logs', icon: ScrollText, adminOnly: true },
   { id: 'users', label: 'User Management', icon: UserCog, adminOnly: true },
