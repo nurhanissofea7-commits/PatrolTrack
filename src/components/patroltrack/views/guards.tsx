@@ -32,11 +32,13 @@ export function GuardsView() {
         <p className="text-sm text-slate-500 dark:text-slate-400">Manage and monitor all security personnel.</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-3">
         <StatCard label="Total Guards" value={guards.length} icon={Users} tone="slate" />
         <StatCard label="On Duty" value={onDuty} icon={Activity} tone="sky" />
         <StatCard label="On Patrol" value={onPatrol} icon={Shield} tone="emerald" />
+        {/* HIDDEN — Avg Rating
         <StatCard label="Avg Rating" value={avgRating} icon={Star} tone="amber" />
+        */}
       </div>
 
       {isLoading ? (
@@ -75,10 +77,12 @@ function GuardCard({ guard, onClick }: { guard: Guard; onClick: () => void }) {
         </div>
       </div>
       <div className="mt-3 flex items-center justify-between border-t border-slate-100 pt-3 dark:border-slate-800">
+        {/* HIDDEN — Rating
         <div className="flex items-center gap-1 text-xs text-slate-500">
           <Star className="h-3.5 w-3.5 text-amber-500" />
           <span className="font-semibold text-slate-700 dark:text-slate-200">{guard.rating.toFixed(1)}</span>
         </div>
+        */}
         <div className="text-xs text-slate-500">
           {guard.shift} shift · {guard.supervisor?.name ?? 'Unassigned'}
         </div>
@@ -111,7 +115,9 @@ function GuardDetailDialog({ guardId, onClose }: { guardId: string; onClose: () 
           <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-2">
               <StatusBadge status={guard.status} />
+              {/* HIDDEN — Rating badge
               <Badge variant="outline"><Star className="mr-1 h-3 w-3 text-amber-500" />{guard.rating.toFixed(1)} rating</Badge>
+              */}
               {guard.licenseNumber && <Badge variant="outline"><IdCard className="mr-1 h-3 w-3" />{guard.licenseNumber}</Badge>}
             </div>
 
