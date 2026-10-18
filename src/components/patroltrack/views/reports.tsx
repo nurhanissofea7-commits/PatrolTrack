@@ -89,8 +89,8 @@ function ReportDialog({ sessionId, onClose }: { sessionId: string; onClose: () =
 
   return (
     <Dialog open onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[88vh] overflow-y-auto">
-        <DialogHeader>
+      <DialogContent className="print-report max-w-3xl max-h-[88vh] overflow-y-auto">
+        <DialogHeader className="print-report-header">
           <DialogTitle className="flex items-center justify-between gap-3 pr-8">
             <span>Digital Patrol Report</span>
             <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="mr-1.5 h-3.5 w-3.5" />Print</Button>
@@ -148,7 +148,7 @@ function ReportDialog({ sessionId, onClose }: { sessionId: string; onClose: () =
                   {session.checkpoints?.map((c: any) => {
                     const v = c.verification
                     return (
-                      <div key={c.id} className="rounded-lg border border-slate-200/70 bg-white p-3 text-sm dark:border-slate-800 dark:bg-slate-900/50">
+                      <div key={c.id} className="print-checkpoint rounded-lg border border-slate-200/70 bg-white p-3 text-sm dark:border-slate-800 dark:bg-slate-900/50">
                         <div className="flex items-start gap-3">
                           <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-slate-100 font-mono text-[10px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">{c.sequence}</span>
                           <div className="min-w-0 flex-1">
@@ -176,11 +176,11 @@ function ReportDialog({ sessionId, onClose }: { sessionId: string; onClose: () =
 
             {/* Incidents */}
             {session.incidents && session.incidents.length > 0 && (
-              <div className="mt-4">
+              <div className="print-page-break mt-4">
                 <h4 className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-200">Incidents Reported</h4>
                 <div className="space-y-2">
                   {session.incidents.map((i) => (
-                    <div key={i.id} className="rounded-lg border border-rose-500/20 bg-rose-500/5 p-3">
+                    <div key={i.id} className="print-checkpoint rounded-lg border border-rose-500/20 bg-rose-500/5 p-3">
                       <div className="flex items-start justify-between gap-2">
                         <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{i.type.replace(/_/g, ' ')} · {i.severity}</p>
                         <Badge variant="outline" className="shrink-0 text-[10px]">{i.status}</Badge>
