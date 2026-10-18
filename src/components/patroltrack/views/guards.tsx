@@ -128,12 +128,14 @@ function GuardDetailDialog({ guardId, onClose }: { guardId: string; onClose: () 
               <ContactRow icon={Shield} label="Hired" value={format(guard.hireDate, 'dd MMM yyyy')} />
             </div>
 
+            {/* HIDDEN — Device details
             {guard.deviceInfo && (
               <div className="rounded-lg bg-slate-50 p-3 text-xs text-slate-600 dark:bg-slate-800/50 dark:text-slate-300">
                 <p className="font-medium text-slate-500">Device: {guard.deviceInfo}</p>
                 {guard.batteryLevel != null && <p className="mt-0.5">Battery: {guard.batteryLevel}%</p>}
               </div>
             )}
+            */}
 
             {/* Stats */}
             {stats && (
