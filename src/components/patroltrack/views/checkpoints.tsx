@@ -69,6 +69,7 @@ export function CheckpointsView() {
                 </div>
               </SectionCard>
 
+              {/*HIDDEN ROUTE MAP
               <SectionCard title="Route Map" description="Checkpoints shown in sequence with geofence radius">
                 <LiveMap
                   checkpoints={selectedRoute.checkpoints}
@@ -79,6 +80,7 @@ export function CheckpointsView() {
                   className="h-[360px]"
                 />
               </SectionCard>
+              */}
 
               <SectionCard title="Checkpoint Sequence" description="Ordered list of checkpoints on this route">
                 <div className="space-y-2">
