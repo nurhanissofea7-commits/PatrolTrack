@@ -49,7 +49,7 @@ export function CheckpointsView() {
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium text-slate-900 dark:text-slate-100">{r.name}</p>
-                      <p className="text-[11px] text-slate-500">{r.checkpointCount} checkpoints · {r.estimatedDurationMin} min</p>
+                      <p className="text-[11px] text-slate-500">{r.checkpointCount} checkpoints</p>
                     </div>
                     <ArrowRight className="h-4 w-4 text-slate-300" />
                   </button>
@@ -63,8 +63,10 @@ export function CheckpointsView() {
             <div className="space-y-4 lg:col-span-2">
               <SectionCard title={selectedRoute.name} description={selectedRoute.description ?? selectedRoute.location}>
                 <div className="grid gap-3 sm:grid-cols-3">
+                  {/*HIDDEN — Est. Duration and Est. Distance
                   <InfoTile icon={Clock} label="Est. Duration" value={`${selectedRoute.estimatedDurationMin} min`} />
                   <InfoTile icon={Ruler} label="Est. Distance" value={`${selectedRoute.estimatedDistanceM} m`} />
+                  */}
                   <InfoTile icon={MapPinned} label="Checkpoints" value={String(selectedRoute.checkpointCount)} />
                 </div>
               </SectionCard>
@@ -122,12 +124,16 @@ function CheckpointRow({ cp, index, isLast }: { cp: Checkpoint; index: number; i
             <Badge variant="outline" className="font-mono text-[10px]">{cp.code}</Badge>
             <p className="truncate text-sm font-medium text-slate-800 dark:text-slate-100">{cp.name}</p>
           </div>
+          {/* HIDDEN — Lat/Lng, distance and time
           <p className="mt-0.5 text-[11px] text-slate-400">Lat {cp.lat.toFixed(5)}, Lng {cp.lng.toFixed(5)}</p>
+          */}
         </div>
+        {/* HIDDEN — distance and time metrics
         <div className="flex items-center gap-2 text-[11px]">
           <span className="rounded bg-slate-100 px-1.5 py-0.5 text-slate-600 dark:bg-slate-800 dark:text-slate-300">±{cp.radiusM}m</span>
           <span className="rounded bg-sky-500/10 px-1.5 py-0.5 text-sky-700 dark:text-sky-300">+{cp.expectedWindowMin}min</span>
         </div>
+        */}
       </div>
     </div>
   )
