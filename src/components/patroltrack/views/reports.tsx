@@ -93,7 +93,7 @@ function ReportDialog({ sessionId, onClose }: { sessionId: string; onClose: () =
         <DialogHeader className="print-report-header">
           <DialogTitle className="flex items-center justify-between gap-3 pr-8">
             <span>Digital Patrol Report</span>
-            <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="mr-1.5 h-3.5 w-3.5" />Print</Button>
+            <Button variant="outline" size="sm" onClick={handlePrint}><Printer className="mr-1.5 h-3.5 w-3.5" />Print</Button>
           </DialogTitle>
           <DialogDescription>{session ? `${session.routeName} · ${session.guardName}` : 'Loading...'}</DialogDescription>
         </DialogHeader>
