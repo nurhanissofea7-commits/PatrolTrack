@@ -147,7 +147,7 @@ function ReportDialog({ sessionId, onClose }: { sessionId: string; onClose: () =
                   {session.checkpoints?.map((c: any) => {
                     const v = c.verification
                     return (
-                                            <div key={c.id} className="rounded-lg border border-slate-200/70 bg-white p-3 text-sm dark:border-slate-800 dark:bg-slate-900/50">
+                      <div key={c.id} className="rounded-lg border border-slate-200/70 bg-white p-3 text-sm dark:border-slate-800 dark:bg-slate-900/50">
                         <div className="flex items-start gap-3">
                           <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-slate-100 font-mono text-[10px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">{c.sequence}</span>
                           <div className="min-w-0 flex-1">
@@ -172,18 +172,18 @@ function ReportDialog({ sessionId, onClose }: { sessionId: string; onClose: () =
               </ScrollArea>
             </div>
 
-            {/* Incidents */}
+                        {/* Incidents */}
             {session.incidents && session.incidents.length > 0 && (
               <div>
                 <h4 className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-200">Incidents Reported</h4>
                 <div className="space-y-2">
                   {session.incidents.map((i) => (
                     <div key={i.id} className="rounded-lg border border-rose-500/20 bg-rose-500/5 p-3">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-start justify-between gap-2">
                         <p className="text-sm font-medium text-slate-800 dark:text-slate-100">{i.type.replace(/_/g, ' ')} · {i.severity}</p>
-                        <Badge variant="outline" className="text-[10px]">{i.status}</Badge>
+                        <Badge variant="outline" className="shrink-0 text-[10px]">{i.status}</Badge>
                       </div>
-                      <p className="mt-1 text-xs text-slate-600 dark:text-slate-300">{i.description}</p>
+                      <p className="mt-2 text-xs text-slate-600 dark:text-slate-300">{i.description}</p>
                     </div>
                   ))}
                 </div>
