@@ -139,11 +139,10 @@ function ReportDialog({ sessionId, onClose }: { sessionId: string; onClose: () =
               </div>
             )}
 
-            {/* Checkpoint verifications */}
+                        {/* Checkpoint verifications */}
             <div>
               <h4 className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-200">Checkpoint Verifications</h4>
-              <ScrollArea className="max-h-[300px] pr-3">
-                <div className="space-y-2">
+              <div className="max-h-[300px] space-y-2 overflow-y-auto pr-2">
                   {session.checkpoints?.map((c: any) => {
                     const v = c.verification
                     return (
@@ -168,13 +167,12 @@ function ReportDialog({ sessionId, onClose }: { sessionId: string; onClose: () =
                       </div>
                     )
                   })}
-                </div>
-              </ScrollArea>
+              </div>
             </div>
 
-                        {/* Incidents */}
+            {/* Incidents */}
             {session.incidents && session.incidents.length > 0 && (
-              <div>
+              <div className="mt-4">
                 <h4 className="mb-2 text-sm font-semibold text-slate-700 dark:text-slate-200">Incidents Reported</h4>
                 <div className="space-y-2">
                   {session.incidents.map((i) => (
