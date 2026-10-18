@@ -147,22 +147,24 @@ function ReportDialog({ sessionId, onClose }: { sessionId: string; onClose: () =
                   {session.checkpoints?.map((c: any) => {
                     const v = c.verification
                     return (
-                      <div key={c.id} className="flex items-start gap-3 rounded-lg border border-slate-200/70 bg-white p-2.5 text-sm dark:border-slate-800 dark:bg-slate-900/50">
-                        <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-slate-100 font-mono text-[10px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">{c.sequence}</span>
-                        <div className="min-w-0 flex-1">
-                          <p className="font-medium text-slate-800 dark:text-slate-100">{c.code} · {c.name}</p>
-                          {v ? (
-                            <p className="text-[11px] text-slate-400">
-                              {format(v.capturedAt, 'dd MMM, HH:mm:ss')} ·
-                              {' '}{v.distanceToCheckpoint >= 0 ? `${Math.round(v.distanceToCheckpoint)}m` : 'no GPS'} ·
-                              {' '}{v.timingStatus.replace(/_/g, ' ')} ·
-                              {' '}<span className={v.status === 'VERIFIED' ? 'text-emerald-600' : v.status === 'FLAGGED' ? 'text-amber-600' : 'text-rose-600'}>{v.status}</span>
-                            </p>
-                          ) : (
-                            <p className="text-[11px] text-slate-400">Not verified</p>
-                          )}
+                                            <div key={c.id} className="rounded-lg border border-slate-200/70 bg-white p-3 text-sm dark:border-slate-800 dark:bg-slate-900/50">
+                        <div className="flex items-start gap-3">
+                          <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-slate-100 font-mono text-[10px] font-bold text-slate-600 dark:bg-slate-800 dark:text-slate-300">{c.sequence}</span>
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium text-slate-800 dark:text-slate-100">{c.code} · {c.name}</p>
+                            {v ? (
+                              <p className="mt-0.5 text-[11px] text-slate-400">
+                                {format(v.capturedAt, 'dd MMM, HH:mm:ss')} ·
+                                {' '}{v.distanceToCheckpoint >= 0 ? `${Math.round(v.distanceToCheckpoint)}m` : 'no GPS'} ·
+                                {' '}{v.timingStatus.replace(/_/g, ' ')} ·
+                                {' '}<span className={v.status === 'VERIFIED' ? 'text-emerald-600' : v.status === 'FLAGGED' ? 'text-amber-600' : 'text-rose-600'}>{v.status}</span>
+                              </p>
+                            ) : (
+                              <p className="mt-0.5 text-[11px] text-slate-400">Not verified</p>
+                            )}
+                          </div>
+                          {v?.photoUrl && <img src={v.photoUrl} alt={c.code} className="h-12 w-16 shrink-0 rounded object-cover" />}
                         </div>
-                        {v?.photoUrl && <img src={v.photoUrl} alt={c.code} className="h-12 w-16 rounded object-cover" />}
                       </div>
                     )
                   })}
