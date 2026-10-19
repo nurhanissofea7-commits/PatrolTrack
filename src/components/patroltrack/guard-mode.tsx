@@ -243,6 +243,8 @@ function GuardHome({ guard, activeSession, fullSession, mySchedules, onStartPatr
           </div>
           <StatusBadge status={guard.status} />
         </div>
+
+        {/* HIDDEN — Online/GPS/Battery status row
         <div className="mt-3 flex items-center gap-3 text-[11px] text-slate-300">
           {online ? (
             <span className="flex items-center gap-1"><Wifi className="h-3 w-3 text-emerald-400" /> Online</span>
@@ -252,6 +254,7 @@ function GuardHome({ guard, activeSession, fullSession, mySchedules, onStartPatr
           <span className="flex items-center gap-1"><Radio className="h-3 w-3 text-emerald-400" /> GPS ±{(guard.currentAccuracy ?? 6.4).toFixed(1)}m</span>
           {guard.batteryLevel != null && <span className="flex items-center gap-1"><BatteryMedium className="h-3 w-3 text-emerald-400" /> {guard.batteryLevel}%</span>}
         </div>
+        */}
       </div>
 
       {/* Active patrol card */}
