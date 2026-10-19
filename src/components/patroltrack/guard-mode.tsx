@@ -1019,12 +1019,18 @@ function GuardProfile({ guard, onSignOut }: { guard: Guard; onSignOut?: () => vo
         <StatusBadge status={guard.status} />
       </div>
       <div className="space-y-2">
+        {/* HIDDEN — Shift
         <ProfileRow icon={Activity} label="Shift" value={guard.shift} />
+        */}
+        {/* HIDDEN — Rating
         <ProfileRow icon={ShieldCheck} label="Rating" value={`${guard.rating.toFixed(1)} / 5.0`} />
+        */}
         <ProfileRow icon={UserIcon} label="Supervisor" value={guard.supervisor?.name ?? '—'} />
         <ProfileRow icon={Radio} label="License" value={guard.licenseNumber ?? '—'} />
         <ProfileRow icon={Clock} label="Hired" value={format(guard.hireDate, 'dd MMM yyyy')} />
+        {/* HIDDEN — Device
         <ProfileRow icon={Activity} label="Device" value={guard.deviceInfo ?? '—'} />
+        */}
       </div>
       {onSignOut && (
         <button
