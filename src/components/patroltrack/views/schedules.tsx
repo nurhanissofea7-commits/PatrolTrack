@@ -166,7 +166,20 @@ function CreateScheduleDialog({ open, onOpenChange }: { open: boolean; onOpenCha
         <div className="space-y-4">
           <div className="space-y-1.5">
             <Label>Schedule Name</Label>
-            <Input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder="e.g. Night Patrol – Block A" />
+            <Select value={form.name} onValueChange={(v) => setForm({ ...form, name: v })}>
+  <SelectTrigger><SelectValue placeholder="Select schedule name" /></SelectTrigger>
+  <SelectContent>
+    <SelectItem value="Night Patrol – Block A">Night Patrol – Block A</SelectItem>
+    <SelectItem value="Night Patrol – Block B">Night Patrol – Block B</SelectItem>
+    <SelectItem value="Night Patrol – Perimeter">Night Patrol – Perimeter</SelectItem>
+    <SelectItem value="Day Patrol – Block A">Day Patrol – Block A</SelectItem>
+    <SelectItem value="Day Patrol – Block B">Day Patrol – Block B</SelectItem>
+    <SelectItem value="Day Patrol – Perimeter">Day Patrol – Perimeter</SelectItem>
+    <SelectItem value="Morning Sweep – Building A">Morning Sweep – Building A</SelectItem>
+    <SelectItem value="Morning Sweep – Building B">Morning Sweep – Building B</SelectItem>
+    <SelectItem value="Weekend Patrol – All Areas">Weekend Patrol – All Areas</SelectItem>
+  </SelectContent>
+</Select>
           </div>
 
           <div className="grid grid-cols-2 gap-3">
