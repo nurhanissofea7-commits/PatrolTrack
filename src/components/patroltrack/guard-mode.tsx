@@ -310,10 +310,12 @@ function GuardHome({ guard, activeSession, fullSession, mySchedules, onStartPatr
       </div>
 
       {/* Quick stats */}
+      {/* HIDDEN — Quick stats (Duty Status & Rating)
       <div className="grid grid-cols-2 gap-2">
         <MiniStat label="Duty Status" value={guard.status.replace(/_/g, ' ')} />
         <MiniStat label="Rating" value={`${guard.rating.toFixed(1)}/5`} />
       </div>
+      */}
     </div>
   )
 }
