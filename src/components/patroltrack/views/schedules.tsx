@@ -177,7 +177,6 @@ function CreateScheduleDialog({ open, onOpenChange }: { open: boolean; onOpenCha
     <SelectItem value="Day Patrol – Perimeter">Day Patrol – Perimeter</SelectItem>
     <SelectItem value="Morning Sweep – Building A">Morning Sweep – Building A</SelectItem>
     <SelectItem value="Morning Sweep – Building B">Morning Sweep – Building B</SelectItem>
-    <SelectItem value="Weekend Patrol – All Areas">Weekend Patrol – All Areas</SelectItem>
   </SelectContent>
 </Select>
           </div>
