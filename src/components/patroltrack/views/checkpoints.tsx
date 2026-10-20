@@ -30,11 +30,41 @@ export function CheckpointsView({ currentUser }: { currentUser: SessionUser }) {
 
   const isAdmin = currentUser.role === 'ADMIN'
 
-  // Add Route mutation
+  // Add Route mutation — creates route AND its checkpoints
   const routeMutation = useMutation({
-    mutationFn: (body: Record<string, unknown>) => api.createRoute(body),
+    mutationFn: async (body: any) => {
+      // 1. Create the route
+      const res = await api.createRoute({
+        name: body.name,
+        description: body.description || null,
+        estimatedDurationMin: 60,
+        estimatedDistanceM: 500,
+        startLat: 3.139,
+        startLng: 101.6869,
+      })
+      // 2. Create all checkpoints for this route
+      if (body.checkpoints && body.checkpoints.length > 0) {
+        for (let i = 0; i < body.checkpoints.length; i++) {
+          const cp = body.checkpoints[i]
+          if (cp.code && cp.name) {
+            await api.createCheckpoint({
+              code: cp.code,
+              name: cp.name,
+              routeId: (res as any).route.id,
+              lat: 3.139,
+              lng: 101.6869,
+              radiusM: 20,
+              sequence: i + 1,
+              expectedWindowMin: 15,
+              description: null,
+            })
+          }
+        }
+      }
+      return res
+    },
     onSuccess: () => {
-      toast.success('Route created')
+      toast.success('Route created with checkpoints')
       qc.invalidateQueries({ queryKey: ['routes'] })
       setShowAddRoute(false)
     },
@@ -182,29 +212,42 @@ function AddRouteDialog({ open, onOpenChange, onSubmit, isLoading }: {
   const [form, setForm] = React.useState({
     name: '',
     description: '',
-    estimatedDurationMin: '60',
-    estimatedDistanceM: '500',
   })
+  const [checkpoints, setCheckpoints] = React.useState<{ code: string; name: string }[]>([
+    { code: '', name: '' },
+  ])
+
+  const addCheckpointRow = () => {
+    setCheckpoints([...checkpoints, { code: '', name: '' }])
+  }
+
+  const removeCheckpointRow = (index: number) => {
+    setCheckpoints(checkpoints.filter((_, i) => i !== index))
+  }
+
+  const updateCheckpoint = (index: number, field: 'code' | 'name', value: string) => {
+    const updated = [...checkpoints]
+    updated[index] = { ...updated[index], [field]: value }
+    setCheckpoints(updated)
+  }
 
   const handleSubmit = () => {
     onSubmit({
       name: form.name,
       description: form.description || null,
-      estimatedDurationMin: parseInt(form.estimatedDurationMin) || 60,
-      estimatedDistanceM: parseInt(form.estimatedDistanceM) || 500,
-      startLat: 3.139,
-      startLng: 101.6869,
+      checkpoints: checkpoints.filter((c) => c.code && c.name),
     })
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Add New Patrol Route</DialogTitle>
-          <DialogDescription>Create a new route. You can add checkpoints after creating it.</DialogDescription>
+          <DialogDescription>Create a route and add its checkpoints all at once.</DialogDescription>
         </DialogHeader>
-        <div className="space-y-3">
+        <div className="space-y-4">
+          {/* Route details */}
           <div className="space-y-1.5">
             <Label>Route Name</Label>
             <Input
@@ -222,26 +265,46 @@ function AddRouteDialog({ open, onOpenChange, onSubmit, isLoading }: {
               rows={2}
             />
           </div>
-          {/* HIDDEN — Estimated Duration and Distance (uncomment to show)
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label>Est. Duration (min)</Label>
-              <Input
-                type="number"
-                value={form.estimatedDurationMin}
-                onChange={(e) => setForm({ ...form, estimatedDurationMin: e.target.value })}
-              />
+
+          {/* Checkpoint list */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label>Checkpoints</Label>
+              <Button type="button" variant="outline" size="sm" onClick={addCheckpointRow}>
+                <Plus className="mr-1 h-3.5 w-3.5" /> Add Checkpoint
+              </Button>
             </div>
-            <div className="space-y-1.5">
-              <Label>Est. Distance (m)</Label>
-              <Input
-                type="number"
-                value={form.estimatedDistanceM}
-                onChange={(e) => setForm({ ...form, estimatedDistanceM: e.target.value })}
-              />
+            <div className="space-y-2">
+              {checkpoints.map((cp, index) => (
+                <div key={index} className="flex items-center gap-2">
+                  <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-emerald-500 text-xs font-bold text-white">
+                    {index + 1}
+                  </div>
+                  <Input
+                    value={cp.code}
+                    onChange={(e) => updateCheckpoint(index, 'code', e.target.value)}
+                    placeholder="Code (e.g. C-CP01)"
+                    className="w-32 text-xs"
+                  />
+                  <Input
+                    value={cp.name}
+                    onChange={(e) => updateCheckpoint(index, 'name', e.target.value)}
+                    placeholder="Name (e.g. Main Entrance)"
+                    className="flex-1 text-xs"
+                  />
+                  {checkpoints.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeCheckpointRow(index)}
+                      className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-slate-400 hover:bg-rose-500/10 hover:text-rose-500"
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+                    </button>
+                  )}
+                </div>
+              ))}
             </div>
           </div>
-          */}
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
