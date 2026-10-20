@@ -419,7 +419,9 @@ function GuardPatrol({ guard, activeSession, fullSession, mySchedules, onSession
         </div>
         <p className="mt-1 text-lg font-bold text-slate-900 dark:text-slate-100">{activeSession.routeName}</p>
         <div className="mt-3 flex items-center gap-3 text-xs text-slate-500">
+          {/* Hide GPS Live
           <span className="flex items-center gap-1"><Radio className="h-3.5 w-3.5 text-emerald-500" /> GPS Live</span>
+          */}
           <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {safeDistanceToNow(activeSession.startedAt)}</span>
         </div>
         <Progress value={progress} className="mt-3 h-2.5 [&>div]:bg-emerald-500" />
