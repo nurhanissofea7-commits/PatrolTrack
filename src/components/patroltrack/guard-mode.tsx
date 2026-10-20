@@ -425,6 +425,7 @@ function GuardPatrol({ guard, activeSession, fullSession, mySchedules, onSession
       </div>
 
       {/* Mini map */}
+      {/* HIDDEN — Mini map
       <div className="overflow-hidden rounded-2xl border border-slate-200/70 dark:border-slate-800">
         <LiveMap
           checkpoints={checkpoints}
@@ -446,6 +447,7 @@ function GuardPatrol({ guard, activeSession, fullSession, mySchedules, onSession
           className="h-[220px]"
         />
       </div>
+      */}
 
       {/* Checkpoint list */}
       <div>
