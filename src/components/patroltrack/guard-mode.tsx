@@ -720,8 +720,12 @@ function CheckpointCaptureSheet({ open, onOpenChange, checkpoint, sessionId, onS
               </div>
               {gps && (
                 <div className="rounded-lg bg-slate-50 p-3 text-xs dark:bg-slate-800/50">
+                  {/* HIDDEN — Distance to CP
                   <div className="flex justify-between"><span className="text-slate-500">Distance to CP</span><span className="font-medium">{result.distance}m</span></div>
+                  */}
+                  {/* HIDDEN — GPS Accuracy
                   <div className="flex justify-between"><span className="text-slate-500">GPS Accuracy</span><span className="font-medium">±{gps.accuracy.toFixed(1)}m</span></div>
+                  */}
                   <div className="flex justify-between"><span className="text-slate-500">Timing</span><span className="font-medium">{result.timingStatus}</span></div>
                   {result.flags?.length > 0 && <div className="flex justify-between"><span className="text-slate-500">Flags</span><span className="font-medium text-amber-600">{result.flags.join(', ')}</span></div>}
                 </div>
