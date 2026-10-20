@@ -36,7 +36,7 @@ import type { DashboardStats, PatrolSession, AppNotification } from '@/lib/types
 export function DashboardView({ liveGuards: realtimeGuards, onSelectGuard, onNavigate }: {
   liveGuards: any[]
   onSelectGuard: (id: string) => void
-  onNavigate: (v: 'live' | 'patrols' | 'incidents' | 'analytics') => void
+  onNavigate: (v: 'live' | 'patrols' | 'incidents' | 'analytics' | 'notifications') => void
 }) {
   const { data: stats, isLoading: statsLoading } = useQuery({ queryKey: ['dashboard'], queryFn: api.dashboard })
   const { data: patrolsData } = useQuery({ queryKey: ['patrols', 'active'], queryFn: () => api.patrols(undefined, 'ACTIVE') })
@@ -138,7 +138,7 @@ export function DashboardView({ liveGuards: realtimeGuards, onSelectGuard, onNav
         <SectionCard
           title="Recent Notifications"
           description="Latest alerts and events"
-          action={<button onClick={() => onNavigate('incidents')} className="text-xs font-medium text-emerald-600 hover:underline dark:text-emerald-400">View all →</button>}
+          action={<button onClick={() => onNavigate('notifications')} className="text-xs font-medium text-emerald-600 hover:underline dark:text-emerald-400">View all →</button>}
         >
           <ScrollArea className="h-[340px] pr-3">
             <div className="space-y-2">

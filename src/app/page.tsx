@@ -86,7 +86,7 @@ export default function Home() {
         onLogout={handleLogout}
         onOpenGuardApp={() => setGuardModeOpen(true)}
       >
-        {view === 'dashboard' && <DashboardView liveGuards={realtime.liveGuards} onSelectGuard={() => setView('live')} onNavigate={(v) => setView(v)} />}
+        {view === 'dashboard' && <DashboardView liveGuards={realtime.liveGuards} onSelectGuard={() => setView('live')} onNavigate={(v) => setView(v as any)} />}
         {view === 'live' && <LiveTrackingView liveGuards={realtime.liveGuards} sosAlert={realtime.sosAlert} />}
         {view === 'patrols' && <PatrolsView />}
         {view === 'schedules' && <SchedulesView />}
