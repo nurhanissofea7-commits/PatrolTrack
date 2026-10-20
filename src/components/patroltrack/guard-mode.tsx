@@ -413,14 +413,16 @@ function GuardPatrol({ guard, activeSession, fullSession, mySchedules, onSession
       <div className="rounded-2xl border border-emerald-500/30 bg-white p-4 dark:bg-slate-900">
         <div className="flex items-center justify-between">
           <p className="text-xs font-semibold uppercase tracking-wider text-emerald-600 dark:text-emerald-400">Active Patrol</p>
+          {/* HIDDEN — Percentage badge
           <Badge variant="outline" className="border-emerald-500/30 bg-emerald-500/10 text-emerald-700 dark:text-emerald-300">{progress}%</Badge>
+          */}
         </div>
         <p className="mt-1 text-lg font-bold text-slate-900 dark:text-slate-100">{activeSession.routeName}</p>
         <div className="mt-3 flex items-center gap-3 text-xs text-slate-500">
           <span className="flex items-center gap-1"><Radio className="h-3.5 w-3.5 text-emerald-500" /> GPS Live</span>
           <span className="flex items-center gap-1"><Clock className="h-3.5 w-3.5" /> {safeDistanceToNow(activeSession.startedAt)}</span>
         </div>
-        <Progress value={progress} className="mt-3 h-2.5" />
+        <Progress value={progress} className="mt-3 h-2.5 [&>div]:bg-emerald-500" />
         <p className="mt-1 text-center text-xs text-slate-500">{completed} / {total} checkpoints completed</p>
       </div>
 
