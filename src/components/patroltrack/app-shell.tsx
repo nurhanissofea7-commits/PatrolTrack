@@ -33,7 +33,7 @@ const NAV: NavItem[] = [
   { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
   //Hidden - Live Tracking Page
   //{ id: 'live', label: 'Live Tracking', icon: MapPin },
-  { id: 'patrols', label: 'Patrol Management', icon: ClipboardList },
+  //{ id: 'patrols', label: 'Patrol Management', icon: ClipboardList },
   { id: 'schedules', label: 'Schedules', icon: CalendarClock },
   { id: 'checkpoints', label: 'Checkpoints', icon: MapPinned },
   { id: 'guards', label: 'Guards', icon: Users },
