@@ -186,6 +186,7 @@ export function AppShell({
             </Badge>
           </div>
 
+{/* HIDDEN — Guard App button
           <Button
             variant="outline"
             size="sm"
@@ -195,6 +196,7 @@ export function AppShell({
             <Smartphone className="mr-1.5 h-4 w-4" />
             <span className="hidden sm:inline">Guard App</span>
           </Button>
+          */}
 
           <Button variant="ghost" size="icon" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
             {mounted && theme === 'dark' ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
