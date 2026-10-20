@@ -90,7 +90,7 @@ export default function Home() {
         {view === 'live' && <LiveTrackingView liveGuards={realtime.liveGuards} sosAlert={realtime.sosAlert} />}
         {view === 'patrols' && <PatrolsView />}
         {view === 'schedules' && <SchedulesView />}
-        {view === 'checkpoints' && <CheckpointsView />}
+        {view === 'checkpoints' && <CheckpointsView currentUser={user} />}
         {view === 'guards' && <GuardsView />}
         {view === 'incidents' && <IncidentsView />}
         {view === 'reports' && <ReportsView />}

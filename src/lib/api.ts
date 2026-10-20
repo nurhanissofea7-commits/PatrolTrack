@@ -76,9 +76,11 @@ export const api = {
 
   // routes
   routes: () => get<{ routes: PatrolRoute[] }>('/api/routes'),
+  createRoute: (body: Record<string, unknown>) => post('/api/routes', body),
 
   // checkpoints
   checkpoints: (routeId?: string) => get<{ checkpoints: Checkpoint[] }>(`/api/checkpoints${routeId ? `?routeId=${routeId}` : ''}`),
+   createCheckpoint: (body: Record<string, unknown>) => post('/api/checkpoints', body),
 
   // schedules
   schedules: () => get<{ schedules: Schedule[] }>('/api/schedules'),
