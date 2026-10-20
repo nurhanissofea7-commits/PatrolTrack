@@ -19,14 +19,29 @@ import type { PatrolSession } from '@/lib/types'
 const STATUS_TABS = ['ALL', 'COMPLETED', 'COMPLETED_WITH_ISSUES', 'INCOMPLETE'] as const
 
 export function ReportsView() {
-  const [tab, setTab] = React.useState<typeof STATUS_TABS[number]>('ALL')
+    const [tab, setTab] = React.useState<typeof STATUS_TABS[number]>('ALL')
   const [selectedId, setSelectedId] = React.useState<string | null>(null)
-  const { data, isLoading } = useQuery({
+
+  // Fetch ALL completed/with-issues/incomplete patrols for the "ALL" tab.
+  const { data: completedData } = useQuery({ queryKey: ['reports', 'COMPLETED'], queryFn: () => api.patrols(undefined, 'COMPLETED') })
+  const { data: issuesData } = useQuery({ queryKey: ['reports', 'COMPLETED_WITH_ISSUES'], queryFn: () => api.patrols(undefined, 'COMPLETED_WITH_ISSUES') })
+  const { data: incompleteData } = useQuery({ queryKey: ['reports', 'INCOMPLETE'], queryFn: () => api.patrols(undefined, 'INCOMPLETE') })
+
+  // For specific tabs, just fetch that status
+  const { data: specificData, isLoading } = useQuery({
     queryKey: ['reports', tab],
-    queryFn: () => api.patrols(undefined, tab === 'ALL' ? 'COMPLETED' : tab),
+    queryFn: () => api.patrols(undefined, tab),
+    enabled: tab !== 'ALL',
   })
-  // Also fetch incomplete sessions separately when ALL
-  const sessions = data?.sessions ?? []
+
+  // Combine all sessions for the "ALL" tab
+  const sessions = tab === 'ALL'
+    ? [
+        ...(completedData?.sessions ?? []),
+        ...(issuesData?.sessions ?? []),
+        ...(incompleteData?.sessions ?? []),
+      ].sort((a, b) => new Date(b.startedAt).getTime() - new Date(a.startedAt).getTime())
+    : (specificData?.sessions ?? [])
 
   return (
     <div className="space-y-4 p-4 sm:p-6">
