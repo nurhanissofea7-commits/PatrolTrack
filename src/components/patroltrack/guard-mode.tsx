@@ -270,9 +270,9 @@ function GuardHome({ guard, activeSession, fullSession, mySchedules, onStartPatr
           <div className="mt-3">
             <div className="mb-1 flex items-center justify-between text-xs">
               <span className="text-slate-500">Progress</span>
-              <span className="font-semibold text-slate-700 dark:text-slate-200">{completed}/{total} · {progress}%</span>
+              <span className="font-semibold text-slate-700 dark:text-slate-200">{completed}/{total}</span>
             </div>
-            <Progress value={progress} className="h-2.5" />
+            <Progress value={progress} className="h-2.5 [&>div]:bg-emerald-500" />
           </div>
           <Button onClick={onStartPatrol} className="mt-3 w-full bg-emerald-600 hover:bg-emerald-700">
             <Navigation className="mr-1.5 h-4 w-4" /> Continue Patrol
