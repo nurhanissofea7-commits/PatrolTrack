@@ -137,6 +137,7 @@ export function GuardMode({ onClose, onSignOut }: { onClose?: () => void; onSign
                   guard={guard}
                   activeSession={activeSession}
                   fullSession={fullSession}
+                   mySchedules={mySchedules}
                   onSessionChanged={() => { refetchSession(); qc.invalidateQueries({ queryKey: ['patrols'] }) }}
                 />
               )}
@@ -321,20 +322,31 @@ function GuardHome({ guard, activeSession, fullSession, mySchedules, onStartPatr
 }
 
 // ─── Patrol screen ──────────────────────────────────────────────────────────
-function GuardPatrol({ guard, activeSession, fullSession, onSessionChanged }: {
-  guard: Guard; activeSession: PatrolSession | null; fullSession: any; onSessionChanged: () => void
+function GuardPatrol({ guard, activeSession, fullSession, mySchedules, onSessionChanged }: {
+  guard: Guard; activeSession: PatrolSession | null; fullSession: any; mySchedules: any[]; onSessionChanged: () => void
 }) {
   const qc = useQueryClient()
-  const [capturing, setCapturing] = React.useState<string | null>(null) // checkpointId being captured
+  const [capturing, setCapturing] = React.useState<string | null>(null)
   const [showIncident, setShowIncident] = React.useState(false)
-  const [showStart, setShowStart] = React.useState(false)
 
+  // Find the guard's next scheduled patrol (today or upcoming)
+  const now = new Date()
+  const upcomingSchedule = mySchedules
+    .filter((s) => s.status === 'SCHEDULED' || s.status === 'IN_PROGRESS')
+    .filter((s) => new Date(s.startTime) <= new Date(now.getTime() + 2 * 60 * 60 * 1000))
+    .sort((a, b) => new Date(a.startTime).getTime() - new Date(b.startTime).getTime())[0]
+
+  // Auto-start patrol using the assigned route from the schedule
   const startMutation = useMutation({
-    mutationFn: (routeId: string) => api.startPatrol({ routeId, guardId: guard.id }),
+    mutationFn: () => {
+      if (upcomingSchedule) {
+        return api.startPatrol({ routeId: upcomingSchedule.routeId, guardId: guard.id, scheduleId: upcomingSchedule.id })
+      }
+      return api.startPatrol({ routeId: '', guardId: guard.id })
+    },
     onSuccess: () => {
       toast.success('Patrol started — GPS tracking active')
       onSessionChanged()
-      setShowStart(false)
     },
     onError: (e: Error) => toast.error(e.message),
   })
@@ -357,14 +369,33 @@ function GuardPatrol({ guard, activeSession, fullSession, onSessionChanged }: {
   if (!activeSession) {
     return (
       <div className="space-y-4">
-        <p className="text-base font-semibold text-slate-800 dark:text-slate-100">Start a Patrol</p>
-        <p className="text-sm text-slate-500">Select a patrol route to begin your shift. GPS tracking activates automatically.</p>
-        <StartPatrolSheet open={showStart} onOpenChange={setShowStart} guardId={guard.id} onStarted={() => onSessionChanged()} />
-        <Button onClick={() => setShowStart(true)} className="w-full bg-emerald-600 hover:bg-emerald-700">
-          <Plus className="mr-1.5 h-4 w-4" /> Choose Route & Start
-        </Button>
+        {upcomingSchedule ? (
+          <>
+            <p className="text-base font-semibold text-slate-800 dark:text-slate-100">Ready to Start Patrol</p>
+            <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4">
+              <p className="text-sm font-bold text-slate-800 dark:text-slate-100">{upcomingSchedule.name}</p>
+              <p className="mt-1 text-xs text-slate-500">{upcomingSchedule.routeName}</p>
+              <p className="mt-0.5 text-[11px] text-slate-400">{upcomingSchedule.checkpointCount} checkpoints assigned</p>
+              {upcomingSchedule.instructions && (
+                <p className="mt-2 rounded-lg bg-amber-500/10 p-2 text-[11px] text-amber-700 dark:text-amber-300">📋 {upcomingSchedule.instructions}</p>
+              )}
+            </div>
+            <p className="text-xs text-slate-500">Tap "Start Patrol" to begin. GPS tracking will activate automatically and your assigned checkpoints will appear.</p>
+            <Button onClick={() => startMutation.mutate()} disabled={startMutation.isPending} className="w-full bg-emerald-600 hover:bg-emerald-700">
+              {startMutation.isPending ? (
+                <><svg className="mr-1.5 h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" /><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" /></svg> Starting...</>
+              ) : (
+                <><Plus className="mr-1.5 h-4 w-4" /> Start Patrol</>
+              )}
+            </Button>
+          </>
+        ) : (
+          <>
+            <p className="text-base font-semibold text-slate-800 dark:text-slate-100">No Scheduled Patrol</p>
+            <p className="text-sm text-slate-500">You have no scheduled patrol right now. Please wait for your supervisor to assign a schedule.</p>
+          </>
+        )}
 
-        {/* Incident without active patrol */}
         <Button variant="outline" onClick={() => setShowIncident(true)} className="w-full">
           <AlertTriangle className="mr-1.5 h-4 w-4" /> Report Incident
         </Button>
@@ -372,7 +403,7 @@ function GuardPatrol({ guard, activeSession, fullSession, onSessionChanged }: {
       </div>
     )
   }
-
+        
   return (
     <div className="space-y-4">
       {/* SOS button - always visible during patrol */}
