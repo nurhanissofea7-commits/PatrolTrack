@@ -74,13 +74,17 @@ export const api = {
   guards: () => get<{ guards: Guard[] }>('/api/guards'),
   guard: (id: string) => get<{ guard: Guard; sessions: PatrolSession[]; incidents: Incident[]; patrolStats: { total: number; completed: number; withIssues: number; active: number; avgRating: number } }>(`/api/guards/${id}`),
 
-  // routes
+    // routes
   routes: () => get<{ routes: PatrolRoute[] }>('/api/routes'),
   createRoute: (body: Record<string, unknown>) => post('/api/routes', body),
+  updateRoute: (id: string, body: Record<string, unknown>) => patch(`/api/routes/${id}`, body),
+  deleteRoute: (id: string) => post(`/api/routes/${id}/delete`, {}),
 
   // checkpoints
   checkpoints: (routeId?: string) => get<{ checkpoints: Checkpoint[] }>(`/api/checkpoints${routeId ? `?routeId=${routeId}` : ''}`),
-   createCheckpoint: (body: Record<string, unknown>) => post('/api/checkpoints', body),
+  createCheckpoint: (body: Record<string, unknown>) => post('/api/checkpoints', body),
+  updateCheckpoint: (id: string, body: Record<string, unknown>) => patch(`/api/checkpoints/${id}`, body),
+  deleteCheckpoint: (id: string) => post(`/api/checkpoints/${id}/delete`, {}),
 
   // schedules
   schedules: () => get<{ schedules: Schedule[] }>('/api/schedules'),
