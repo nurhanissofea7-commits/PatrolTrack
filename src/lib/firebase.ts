@@ -63,7 +63,7 @@ if (!serviceAccount && process.env.NODE_ENV !== 'production') {
     const { join } = require('path')
     
     const KEY_FILE_NAMES = [
-      'patroltrack-fyp-firebase-adminsdk-fbsvc-6aaafee6e7.json',
+      'patroltrack-fyp-firebase-adminsdk-fbsvc-fbbeaf0b70.json',
       'firebase-service-account.json',
       'service-account.json',
     ]

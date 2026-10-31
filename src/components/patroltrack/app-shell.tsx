@@ -89,12 +89,15 @@ export function AppShell({
   const items = NAV.filter((n) => !n.adminOnly || user.role === 'ADMIN')
   const activeLabel = VIEW_LABELS[view]
 
-  const SidebarContent = (
-    <div className="flex h-full flex-col">
+    const SidebarContent = (
+    <div className="flex h-full flex-col bg-gradient-to-b from-slate-900 to-slate-950">
       {/* Brand */}
-      <div className="flex h-16 items-center gap-2.5 border-b border-white/10 px-5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500 shadow-lg shadow-emerald-500/20">
-          <Shield className="h-5 w-5 text-slate-950" strokeWidth={2.5} />
+      <div className="flex h-16 items-center gap-3 border-b border-white/5 px-5">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 shadow-lg shadow-emerald-500/30">
+          <svg className="h-6 w-6 text-slate-950" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4" strokeWidth={3} />
+          </svg>
         </div>
         <div className="flex flex-col leading-none">
           <span className="text-base font-bold tracking-tight text-white">PatrolTrack</span>
@@ -115,16 +118,17 @@ export function AppShell({
                 setMobileOpen(false)
               }}
               className={cn(
-                'group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors',
+                'group relative flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all',
                 active
-                  ? 'bg-emerald-500/15 text-emerald-300 ring-1 ring-emerald-500/30'
+                  ? 'bg-emerald-500/10 text-emerald-300 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)]'
                   : 'text-slate-400 hover:bg-white/5 hover:text-slate-100'
               )}
             >
-              <Icon className={cn('h-[18px] w-[18px] shrink-0', active ? 'text-emerald-400' : 'text-slate-500 group-hover:text-slate-300')} />
+              {active && <div className="absolute left-0 top-1/2 h-6 w-1 -translate-y-1/2 rounded-r-full bg-emerald-400" />}
+              <Icon className={cn('h-[18px] w-[18px] shrink-0 transition-colors', active ? 'text-emerald-400' : 'text-slate-500 group-hover:text-slate-300')} />
               <span className="flex-1 text-left">{item.label}</span>
               {item.id === 'notifications' && unreadCount > 0 && (
-                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-bold text-white">
+                <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-rose-500 px-1.5 text-[10px] font-bold text-white shadow-sm shadow-rose-500/50">
                   {unreadCount}
                 </span>
               )}
@@ -134,7 +138,7 @@ export function AppShell({
       </nav>
 
       {/* User */}
-      <div className="border-t border-white/10 p-3">
+      <div className="border-t border-white/5 p-3">
         <div className="flex items-center gap-3 rounded-lg bg-white/5 p-2.5">
           <Avatar className="h-9 w-9 border border-emerald-500/30">
             <AvatarFallback className="bg-emerald-500/20 text-emerald-300 text-xs font-semibold">
