@@ -41,7 +41,7 @@ const SAFETY_CHECKLIST = [
   { q: 'Are there any safety hazards?', critical: true },
 ]
 
-export function GuardMode({ onClose, onSignOut }: { onClose?: () => void; onSignOut?: () => void }) {
+export function GuardMode({ onClose, onSignOut, onSOS }: { onClose?: () => void; onSignOut?: () => void; onSOS?: (data: { guardId: string; guardName: string; lat: number; lng: number; accuracy: number; locationLabel?: string; message?: string }) => void }) {
   const [tab, setTab] = React.useState<Tab>('home')
   const [guardId, setGuardId] = React.useState<string | null>(null)
   const qc = useQueryClient()
@@ -132,12 +132,13 @@ export function GuardMode({ onClose, onSignOut }: { onClose?: () => void; onSign
               {tab === 'home' && guard && (
                 <GuardHome guard={guard} activeSession={activeSession} fullSession={fullSession} mySchedules={mySchedules} onStartPatrol={() => setTab('patrol')} />
               )}
-              {tab === 'patrol' && guard && (
+                            {tab === 'patrol' && guard && (
                 <GuardPatrol
                   guard={guard}
                   activeSession={activeSession}
                   fullSession={fullSession}
-                   mySchedules={mySchedules}
+                  mySchedules={mySchedules}
+                  onSOS={onSOS}
                   onSessionChanged={() => { refetchSession(); qc.invalidateQueries({ queryKey: ['patrols'] }) }}
                 />
               )}
@@ -322,8 +323,8 @@ function GuardHome({ guard, activeSession, fullSession, mySchedules, onStartPatr
 }
 
 // ─── Patrol screen ──────────────────────────────────────────────────────────
-function GuardPatrol({ guard, activeSession, fullSession, mySchedules, onSessionChanged }: {
-  guard: Guard; activeSession: PatrolSession | null; fullSession: any; mySchedules: any[]; onSessionChanged: () => void
+function GuardPatrol({ guard, activeSession, fullSession, mySchedules, onSessionChanged, onSOS }: {
+  guard: Guard; activeSession: PatrolSession | null; fullSession: any; mySchedules: any[]; onSessionChanged: () => void; onSOS?: (data: { guardId: string; guardName: string; lat: number; lng: number; accuracy: number; locationLabel?: string; message?: string }) => void
 }) {
   const qc = useQueryClient()
   const [capturing, setCapturing] = React.useState<string | null>(null)
@@ -406,8 +407,8 @@ function GuardPatrol({ guard, activeSession, fullSession, mySchedules, onSession
         
   return (
     <div className="space-y-4">
-      {/* SOS button - always visible during patrol */}
-      <SOSButton guard={guard} />
+            {/* SOS button - always visible during patrol */}
+      <SOSButton guard={guard} onSOS={onSOS} />
 
       {/* Patrol header */}
       <div className="rounded-2xl border border-emerald-500/30 bg-white p-4 dark:bg-slate-900">
@@ -520,7 +521,7 @@ function GuardPatrol({ guard, activeSession, fullSession, mySchedules, onSession
 }
 
 // ─── SOS Button ─────────────────────────────────────────────────────────────
-function SOSButton({ guard }: { guard: Guard }) {
+function SOSButton({ guard, onSOS }: { guard: Guard; onSOS?: (data: { guardId: string; guardName: string; lat: number; lng: number; accuracy: number; locationLabel?: string; message?: string }) => void }) {
   const [confirmOpen, setConfirmOpen] = React.useState(false)
   const [holding, setHolding] = React.useState(false)
   const [holdProgress, setHoldProgress] = React.useState(0)
@@ -531,9 +532,20 @@ function SOSButton({ guard }: { guard: Guard }) {
       const pos = await getPosition()
       return api.activateSOS({ ...pos, guardId: guard.id, locationLabel: 'Building A — Parking Area', message: `SOS activated by ${guard.name}` })
     },
-    onSuccess: () => {
+        onSuccess: (data: any) => {
       toast.error('🚨 EMERGENCY SOS ACTIVATED — Supervisor notified')
       setConfirmOpen(false)
+      if (onSOS) {
+        onSOS({
+          guardId: guard.id,
+          guardName: guard.name,
+          lat: data?.alert?.lat ?? 3.139,
+          lng: data?.alert?.lng ?? 101.6869,
+          accuracy: data?.alert?.accuracy ?? 6,
+          locationLabel: 'Building A — Parking Area',
+          message: `SOS activated by ${guard.name}`,
+        })
+      }
     },
     onError: (e: Error) => toast.error(e.message),
   })

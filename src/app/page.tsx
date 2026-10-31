@@ -19,6 +19,7 @@ import { AuditView } from '@/components/patroltrack/views/audit'
 import { UsersView } from '@/components/patroltrack/views/users'
 import { SettingsView } from '@/components/patroltrack/views/settings'
 import { toast } from 'sonner'
+import { SOSAlert } from '@/components/patroltrack/sos-alert'
 
 export default function Home() {
   const [view, setView] = React.useState<ViewId>('dashboard')
@@ -103,6 +104,11 @@ export default function Home() {
           <div className="p-6 text-center text-sm text-slate-500">Settings are only available to administrators.</div>
         )}
       </AppShell>
+
+       {/* Real-time SOS Alert Popup */}
+      <SOSAlert alert={realtime.sosAlert} onDismiss={realtime.clearSos} />
+
+      {guardModeOpen && <GuardMode onClose={() => setGuardModeOpen(false)} onSOS={realtime.activateSos} />}
 
       {guardModeOpen && <GuardMode onClose={() => setGuardModeOpen(false)} />}
     </>
