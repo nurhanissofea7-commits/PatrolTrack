@@ -22,6 +22,7 @@ import { toast } from 'sonner'
 import { SOSAlert } from '@/components/patroltrack/sos-alert'
 
 export default function Home() {
+  const [sosAlert, setSosAlert] = React.useState<any | null>(null)
   const [view, setView] = React.useState<ViewId>('dashboard')
   const [guardModeOpen, setGuardModeOpen] = React.useState(false)
   const qc = useQueryClient()
@@ -30,17 +31,35 @@ export default function Home() {
   const user = meData?.user
 
   const { data: notifData } = useQuery({ queryKey: ['notifications'], queryFn: api.notifications, enabled: !!user })
+    // Poll for active SOS alerts every 2 seconds (works on Vercel without Socket.IO)
+  const { data: emergencyData } = useQuery({
+    queryKey: ['emergency'],
+    queryFn: api.emergency,
+    refetchInterval: 2000, 
+    enabled: !!user && user.role !== 'GUARD',
+  })
+
+  // Watch for new SOS alerts
+  const lastSosIdRef = React.useRef<string | null>(null)
+  React.useEffect(() => {
+    const activeAlert = emergencyData?.alerts?.find((a: any) => a.status === 'ACTIVE')
+    if (activeAlert && activeAlert.id !== lastSosIdRef.current) {
+      lastSosIdRef.current = activeAlert.id
+      setSosAlert({
+        id: activeAlert.id,
+        guardName: activeAlert.guardName,
+        lat: activeAlert.lat,
+        lng: activeAlert.lng,
+        accuracy: activeAlert.accuracy,
+        locationLabel: activeAlert.locationLabel,
+        timestamp: new Date(activeAlert.createdAt).getTime(),
+      })
+    }
+  }, [emergencyData])
   const unreadCount = notifData?.notifications.filter((n) => !n.read).length ?? 0
 
   const realtime = useRealtime()
 
-  // Toast on incoming SOS
-  React.useEffect(() => {
-    if (realtime.sosAlert) {
-      toast.error(`🚨 EMERGENCY SOS — ${realtime.sosAlert.guardName}`, { description: realtime.sosAlert.locationLabel ?? 'Unknown location' })
-      realtime.clearSos()
-    }
-  }, [realtime.sosAlert, realtime.clearSos])
 
   // Toast on incoming notification
   React.useEffect(() => {
@@ -106,7 +125,7 @@ export default function Home() {
       </AppShell>
 
        {/* Real-time SOS Alert Popup */}
-      <SOSAlert alert={realtime.sosAlert} onDismiss={realtime.clearSos} />
+       <SOSAlert alert={sosAlert || realtime.sosAlert} onDismiss={() => { setSosAlert(null); realtime.clearSos() }} />
 
       {guardModeOpen && <GuardMode onClose={() => setGuardModeOpen(false)} onSOS={realtime.activateSos} />}
 
