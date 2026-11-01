@@ -113,71 +113,73 @@ export function DashboardView({ liveGuards: realtimeGuards, onSelectGuard, onNav
         )}
       </div>
 
-      <div className="grid gap-6 lg:grid-cols-3">
-        {/* Live map preview */}
-        {/*
-        <SectionCard
-          className="lg:col-span-2"
-          title="Live Guard Map"
-          description="Real-time positions of all active guards"
-          action={<button onClick={() => onNavigate('live')} className="text-xs font-medium text-emerald-600 hover:underline dark:text-emerald-400">View full map →</button>}
-        >
-          <LiveMap
-            checkpoints={[]}
-            liveGuards={liveGuards}
-            selectedGuardId={null}
-            onSelectGuard={onSelectGuard}
-            showGeofences={false}
-            showRoutePath={false}
-            className="h-[340px]"
-          />
-        </SectionCard>
-        */}
+      {/* Option C — Active Patrols + Notifications side-by-side, equal width (1 col each) */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Grid 1 — Active Patrols (left, equal width) */}
+        <div className="grid gap-6">
+          {/* HIDDEN — Live map preview (uncomment to show)
+          <SectionCard
+            title="Live Guard Map"
+            description="Real-time positions of all active guards"
+            action={<button onClick={() => onNavigate('live')} className="text-xs font-medium text-emerald-600 hover:underline dark:text-emerald-400">View full map →</button>}
+          >
+            <LiveMap
+              checkpoints={[]}
+              liveGuards={liveGuards}
+              selectedGuardId={null}
+              onSelectGuard={onSelectGuard}
+              showGeofences={false}
+              showRoutePath={false}
+              className="h-[340px]"
+            />
+          </SectionCard>
+          */}
 
-        {/* Notifications */}
-        <SectionCard
-          title="Recent Notifications"
-          description="Latest alerts and events"
-          action={<button onClick={() => onNavigate('notifications')} className="text-xs font-medium text-emerald-600 hover:underline dark:text-emerald-400">View all →</button>}
-        >
-          <ScrollArea className="h-[340px] pr-3">
-            <div className="space-y-2">
-              {notifications.length === 0 ? (
-                <p className="py-8 text-center text-sm text-slate-500">No notifications</p>
-              ) : (
-                notifications.map((n) => <NotificationRow key={n.id} n={n} />)
-              )}
-            </div>
-          </ScrollArea>
-        </SectionCard>
-      </div>
+          {/* Active Patrols */}
+          <SectionCard
+            title="Active Patrols"
+            description="Patrols currently in progress"
+            action={<button onClick={() => onNavigate('patrols')} className="text-xs font-medium text-emerald-600 hover:underline dark:text-emerald-400">Manage →</button>}
+          >
+            {activePatrols.length === 0 ? (
+              <p className="py-8 text-center text-sm text-slate-500">No active patrols right now.</p>
+            ) : (
+              <div className="space-y-3">
+                {activePatrols.map((p) => <ActivePatrolRow key={p.id} patrol={p} />)}
+              </div>
+            )}
+          </SectionCard>
+        </div>
 
-      {/* Active patrols + Verification accuracy */}
-      <div className="grid gap-6 lg:grid-cols-3">
-        <SectionCard
-          className="lg:col-span-2"
-          title="Active Patrols"
-          description="Patrols currently in progress"
-          action={<button onClick={() => onNavigate('patrols')} className="text-xs font-medium text-emerald-600 hover:underline dark:text-emerald-400">Manage →</button>}
-        >
-          {activePatrols.length === 0 ? (
-            <p className="py-8 text-center text-sm text-slate-500">No active patrols right now.</p>
-          ) : (
-            <div className="space-y-3">
-              {activePatrols.map((p) => <ActivePatrolRow key={p.id} patrol={p} />)}
-            </div>
-          )}
-        </SectionCard>
+        {/* Grid 2 — Notifications (right, equal width, beside Grid 1) */}
+        <div className="grid gap-6">
+          {/* Notifications */}
+          <SectionCard
+            title="Recent Notifications"
+            description="Latest alerts and events"
+            action={<button onClick={() => onNavigate('notifications')} className="text-xs font-medium text-emerald-600 hover:underline dark:text-emerald-400">View all →</button>}
+          >
+            <ScrollArea className="h-[340px] pr-3">
+              <div className="space-y-2">
+                {notifications.length === 0 ? (
+                  <p className="py-8 text-center text-sm text-slate-500">No notifications</p>
+                ) : (
+                  notifications.map((n) => <NotificationRow key={n.id} n={n} />)
+                )}
+              </div>
+            </ScrollArea>
+          </SectionCard>
 
-{/*
-        <SectionCard
-          title="Verification Accuracy"
-          description="Checkpoint verification outcomes"
-          action={<button onClick={() => onNavigate('analytics')} className="text-xs font-medium text-emerald-600 hover:underline dark:text-emerald-400">Analytics →</button>}
-        >
-          {statsLoading ? <LoadingState rows={4} /> : <VerificationAccuracy stats={stats!} />}
-        </SectionCard>
-*/}
+          {/* HIDDEN — Verification Accuracy section (uncomment to show)
+          <SectionCard
+            title="Verification Accuracy"
+            description="Checkpoint verification outcomes"
+            action={<button onClick={() => onNavigate('analytics')} className="text-xs font-medium text-emerald-600 hover:underline dark:text-emerald-400">Analytics →</button>}
+          >
+            {statsLoading ? <LoadingState rows={4} /> : <VerificationAccuracy stats={stats!} />}
+          </SectionCard>
+          */}
+        </div>
       </div>
     </div>
   )
@@ -235,6 +237,7 @@ function ActivePatrolRow({ patrol }: { patrol: PatrolSession }) {
   )
 }
 
+// Verification Accuracy component (currently hidden from dashboard — uncomment the SectionCard above to show)
 function VerificationAccuracy({ stats }: { stats: DashboardStats }) {
   const v = stats.verification
   const rows = [
