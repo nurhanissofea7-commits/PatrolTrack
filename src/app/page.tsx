@@ -138,12 +138,24 @@ export default function Home() {
         )}
       </AppShell>
 
-       {/* Real-time SOS Alert Popup */}
-       <SOSAlert alert={sosAlert || realtime.sosAlert} onDismiss={() => { setSosAlert(null); realtime.clearSos() }} />
+             {/* Real-time SOS Alert Popup */}
+      <SOSAlert 
+        alert={sosAlert || realtime.sosAlert} 
+        onDismiss={async () => {
+          const alertToDismiss = sosAlert || realtime.sosAlert
+          if (alertToDismiss?.id) {
+            try {
+              await api.resolveSOS(alertToDismiss.id, 'RESOLVED')
+            } catch (e) {
+              console.error('Failed to resolve SOS in database', e)
+            }
+          }
+          setSosAlert(null)
+          realtime.clearSos()
+        }} 
+      />
 
       {guardModeOpen && <GuardMode onClose={() => setGuardModeOpen(false)} onSOS={realtime.activateSos} />}
-
-      {guardModeOpen && <GuardMode onClose={() => setGuardModeOpen(false)} />}
     </>
   )
 }

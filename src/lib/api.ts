@@ -131,10 +131,11 @@ export const api = {
   notifications: () => get<{ notifications: AppNotification[] }>('/api/notifications'),
   markRead: (id: string) => patch(`/api/notifications/${id}/read`),
 
-  // emergency
+    // emergency
   emergency: () => get<{ alerts: { id: string; guardId: string; guardName: string; lat: number; lng: number; accuracy: number; locationLabel: string | null; status: string; message: string | null; acknowledgedAt: string | null; resolvedAt: string | null; createdAt: string }[] }>('/api/emergency'),
   activateSOS: (body: { lat: number; lng: number; accuracy: number; locationLabel?: string; message?: string }) =>
     post<{ alert: { id: string } }>('/api/emergency', body),
+  resolveSOS: (id: string, status: string = 'RESOLVED') => patch(`/api/emergency/${id}`, { status }),
 
   // audit
   audit: () => get<{ logs: AuditLog[] }>('/api/audit'),
