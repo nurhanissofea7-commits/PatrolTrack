@@ -31,7 +31,7 @@ export default function Home() {
   const user = meData?.user
 
   const { data: notifData } = useQuery({ queryKey: ['notifications'], queryFn: api.notifications, enabled: !!user })
-    // Poll for active SOS alerts every 2 seconds (works on Vercel without Socket.IO)
+      // Poll for active SOS alerts every 2 seconds (works on Vercel without Socket.IO)
   const { data: emergencyData } = useQuery({
     queryKey: ['emergency'],
     queryFn: api.emergency,
@@ -39,21 +39,38 @@ export default function Home() {
     enabled: !!user && user.role !== 'GUARD',
   })
 
-  // Watch for new SOS alerts
+  // Watch for NEW SOS alerts only (ignore old ones on page load)
   const lastSosIdRef = React.useRef<string | null>(null)
+  const isFirstLoadRef = React.useRef(true)
   React.useEffect(() => {
     const activeAlert = emergencyData?.alerts?.find((a: any) => a.status === 'ACTIVE')
-    if (activeAlert && activeAlert.id !== lastSosIdRef.current) {
-      lastSosIdRef.current = activeAlert.id
-      setSosAlert({
-        id: activeAlert.id,
-        guardName: activeAlert.guardName,
-        lat: activeAlert.lat,
-        lng: activeAlert.lng,
-        accuracy: activeAlert.accuracy,
-        locationLabel: activeAlert.locationLabel,
-        timestamp: new Date(activeAlert.createdAt).getTime(),
-      })
+    
+    if (activeAlert) {
+      // On first load, just record the existing alert ID without showing popup
+      if (isFirstLoadRef.current) {
+        lastSosIdRef.current = activeAlert.id
+        isFirstLoadRef.current = false
+        return
+      }
+      
+      // On subsequent checks, only show popup if it's a NEW alert
+      if (activeAlert.id !== lastSosIdRef.current) {
+        lastSosIdRef.current = activeAlert.id
+        setSosAlert({
+          id: activeAlert.id,
+          guardName: activeAlert.guardName,
+          lat: activeAlert.lat,
+          lng: activeAlert.lng,
+          accuracy: activeAlert.accuracy,
+          locationLabel: activeAlert.locationLabel,
+          timestamp: new Date(activeAlert.createdAt).getTime(),
+        })
+      }
+    } else {
+      // No active alerts - reset first load flag
+      if (isFirstLoadRef.current) {
+        isFirstLoadRef.current = false
+      }
     }
   }, [emergencyData])
   const unreadCount = notifData?.notifications.filter((n) => !n.read).length ?? 0
