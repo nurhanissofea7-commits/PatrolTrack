@@ -31,7 +31,7 @@ export default function Home() {
   const user = meData?.user
 
   const { data: notifData } = useQuery({ queryKey: ['notifications'], queryFn: api.notifications, enabled: !!user })
-      // Poll for active SOS alerts every 2 seconds (works on Vercel without Socket.IO)
+        // Poll for active SOS alerts every 2 seconds (works on Vercel without Socket.IO)
   const { data: emergencyData } = useQuery({
     queryKey: ['emergency'],
     queryFn: api.emergency,
@@ -39,37 +39,34 @@ export default function Home() {
     enabled: !!user && user.role !== 'GUARD',
   })
 
-  // Watch for NEW SOS alerts only (ignore old ones on page load)
-  const lastSosIdRef = React.useRef<string | null>(null)
-  const isFirstLoadRef = React.useRef(true)
+  // Watch for NEW SOS alerts only (ignore old ones on page load/refresh)
+  const knownAlertIdsRef = React.useRef<Set<string>>(new Set())
+  const isInitializedRef = React.useRef(false)
+
   React.useEffect(() => {
-    const activeAlert = emergencyData?.alerts?.find((a: any) => a.status === 'ACTIVE')
+    const activeAlerts = emergencyData?.alerts?.filter((a: any) => a.status === 'ACTIVE') || []
     
-    if (activeAlert) {
-      // On first load, just record the existing alert ID without showing popup
-      if (isFirstLoadRef.current) {
-        lastSosIdRef.current = activeAlert.id
-        isFirstLoadRef.current = false
-        return
-      }
-      
-      // On subsequent checks, only show popup if it's a NEW alert
-      if (activeAlert.id !== lastSosIdRef.current) {
-        lastSosIdRef.current = activeAlert.id
+    // On the very first fetch, record all existing alerts so we don't trigger them
+    if (!isInitializedRef.current) {
+      activeAlerts.forEach((a: any) => knownAlertIdsRef.current.add(a.id))
+      isInitializedRef.current = true
+      return
+    }
+
+    // On subsequent fetches, look for alerts we haven't seen before
+    for (const alert of activeAlerts) {
+      if (!knownAlertIdsRef.current.has(alert.id)) {
+        knownAlertIdsRef.current.add(alert.id)
         setSosAlert({
-          id: activeAlert.id,
-          guardName: activeAlert.guardName,
-          lat: activeAlert.lat,
-          lng: activeAlert.lng,
-          accuracy: activeAlert.accuracy,
-          locationLabel: activeAlert.locationLabel,
-          timestamp: new Date(activeAlert.createdAt).getTime(),
+          id: alert.id,
+          guardName: alert.guardName,
+          lat: alert.lat,
+          lng: alert.lng,
+          accuracy: alert.accuracy,
+          locationLabel: alert.locationLabel,
+          timestamp: new Date(alert.createdAt).getTime(),
         })
-      }
-    } else {
-      // No active alerts - reset first load flag
-      if (isFirstLoadRef.current) {
-        isFirstLoadRef.current = false
+        break // Only show one popup at a time
       }
     }
   }, [emergencyData])
